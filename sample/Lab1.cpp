@@ -1,65 +1,67 @@
-#include<iostream>
-#include<fstream>
-#include<string>
-#include"Scanner.h"
-#include"Storage.h"
+#include <fstream>
+#include <iostream>
+#include <string>
 
+#include "Scanner.h"
+#include "Storage.h"
 
+void welcome() {
+    std::cout << "编译原理实验 SAMPLE语言的词法分析器\n"
+                 "作者: 黄智权\n"
+                 "班级: 计算机科学与技术1班\n"
+                 "学号: 201836580388\n";
+}
 
 int main(int argc, char *argv[]) {
-	std::string str, program;
-	Storage storage;
-	Scanner test(&storage);
-	std::ifstream is;
-
-	std::cout << "黄智权" << '\t' << "计算机科学与技术1班"
-		<< '\t' << "201836580388" << "\n\n";
-	std::cout << "请输入测试程序" << '\n';
-	std::cin >> program;
-	std::cin.get();
-	is.open(program);
-	if (is) {
-		std::cout << "\n词法分析结果如下：\n";
-		unsigned count = 0;
-		unsigned row = 0;
-		while (std::getline(is, str)) {
-			for (size_t i = 0; i < str.length();) {
-				try {
-					token result = test.scan(str, i, row);
-					if (result.val_index != VALUE_NONE) {
-						++count;
-						std::cout << result << '\t';
-						if (count % 5 == 0)
-							std::cout << '\n';
-					}
-				}
-				catch (string_error e) {
-					e.print(std::cerr);
-					std::cin.get();
-					return 1;
-				}
-				catch (anotation_error e) {
-					e.print(std::cerr);
-					std::cin.get();
-					return 1;
-				}
-				catch (character_error e) {
-					e.print(std::cerr);
-					std::cin.get();
-					return 1;
-				}
-				catch (word_error e) {
-					e.print(std::cerr);
-					std::cin.get();
-					return 1;
-				}
-			}
-			++row;
-		}
-		is.close();
-	}
-
-	std::cout << "\n输入任意字符退出程序\n";
-	std::cin.get();
-	return 0;
+    welcome();
+    while (true) {
+        std::cout << "请输入测试文件名(直接回车退出程序): ";
+        std::string fileName;
+        std::getline(std::cin, fileName);
+		if (fileName.empty()) break;
+        std::ifstream in;
+        in.open(fileName);
+        if (!in) {
+            std::cout << "无法打开文件: " << fileName << '\n';
+            continue;
+        }
+        Storage storage;
+        Scanner scanner(&storage);
+        std::cout << "词法分析结果: \n";
+        unsigned count = 0;
+        unsigned row = 0;
+        std::string str;
+        while (std::getline(in, str)) {
+            for (size_t i = 0; i < str.length();) {
+                try {
+                    token result = scanner.scan(str, i, row);
+                    if (result.val_index != VALUE_NONE) {
+                        ++count;
+                        std::cout << result << '\t';
+                        if (count % 5 == 0) std::cout << '\n';
+                    }
+                } catch (string_error e) {
+                    e.print(std::cerr);
+                    std::cin.get();
+                    return 1;
+                } catch (anotation_error e) {
+                    e.print(std::cerr);
+                    std::cin.get();
+                    return 1;
+                } catch (character_error e) {
+                    e.print(std::cerr);
+                    std::cin.get();
+                    return 1;
+                } catch (word_error e) {
+                    e.print(std::cerr);
+                    std::cin.get();
+                    return 1;
+                }
+            }
+            ++row;
+        }
+		std::cout << std::endl;
+        in.close();
+    }
+    return 0;
 }
