@@ -7,4 +7,3 @@ repeat  set  stop  then  to
 true  until  var  while  write
 abc  123  'EFG'  (  )  *  +  ,  -  .  ..  /
 :  :=  ;  <  <=  <>  =  >  >=  [  ]
-
