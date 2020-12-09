@@ -191,7 +191,6 @@ bool Parser::program(size_t &i) {
 
 	if (i == Tokens.size() - 1 &&
 		isEqual(Tokens[i], ".")) {
-		
 		gen("sys", EMPTY, EMPTY, EMPTY);
 		return true;
 	}
@@ -701,7 +700,7 @@ bool Parser::booleanUnit(size_t &i,
 			if (!isBoolType(storage->getType(
 				Tokens[i].val_index)) && !isIntType(
 					storage->getType(Tokens[i].val_index)))
-				throw type_error(i, storage->getName(Tokens[i].val_index));
+				throw type_error(getRow(i), storage->getName(Tokens[i].val_index));
 
 			else {
 				tl = IntermediateCode.size();
@@ -747,9 +746,8 @@ bool Parser::booleanUnit(size_t &i,
 
 
 void Parser::parse(std::ifstream &is) {
-
 	std::string str;
-	Scanner scanner(storage);
+	Lexer scanner(storage);
 	unsigned row = 0;
 	while (std::getline(is, str)) {
 		size_t i = 0;
@@ -766,7 +764,7 @@ void Parser::parse(std::ifstream &is) {
 	if (isProgram(i) && program(i))
 		return;
 	else
-		throw syntax_error(i);
+		throw syntax_error(getRow(i));
 }
 
 
@@ -775,23 +773,25 @@ void Parser::printIntermediateCode(std::ostream &out) {
 	unsigned i = 0;
 	for (quaternary q : IntermediateCode) {
 
-		out << "(" << i << ")" << "\t(" << q.ope << ", ";
+		out << "(";
+		out.width(2);
+		out << i << ")" << "\t(" << q.ope << " , ";
 
 		if (q.ide_l == EMPTY)
 			out << "-, ";
 		else if (q.ope == "jnz") {
 			if (isBoolean(q.ide_l))
-				out << Data::getValue(q.ide_l) << ", ";
+				out << Data::getValue(q.ide_l) << " , ";
 			else
 				out << storage->getName(q.ide_l) << ", ";
 		}
 		else
-			out << storage->getName(q.ide_l) << ", ";
+			out << storage->getName(q.ide_l) << " , ";
 
 		if (q.ide_r == EMPTY)
-			out << "-, ";
+			out << "- , ";
 		else
-			out << storage->getName(q.ide_r) << ", ";
+			out << storage->getName(q.ide_r) << " , ";
 
 		if (q.ope[0] == 'j')
 			out << q.ide;

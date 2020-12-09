@@ -1,14 +1,14 @@
 CC          = g++
 CFLAGS      = -std=c++17
 
-lab1: Lab1.cpp Data.cpp Parser.cpp Scanner.cpp Storage.cpp
-	@$(CC) -o Lab1 $(CFLAGS) $^
-	@Lab1
+main1: main1.cpp Data.cpp Parser.cpp Lexer.cpp Storage.cpp
+	@$(CC) -o main1 $(CFLAGS) $^
+	@main1
 
-lab2: Lab2.cpp Data.cpp Parser.cpp Scanner.cpp Storage.cpp
-	@$(CC) -o Lab2 $(CFLAGS) $^
-	@Lab2
+main2: main2.cpp Data.cpp Parser.cpp Lexer.cpp Storage.cpp
+	@$(CC) -o main2 $(CFLAGS) $^
+	@main2
 
 clean:
-	del /f /q *.o Lab1.exe Lab2.exe
+	del /f /q *.o main1.exe main2.exe
 

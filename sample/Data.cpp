@@ -15,10 +15,10 @@ const std::vector<std::string> Data::coding_schedule = {
     "/*",      ":",         ":=",      ";",       "<",     "<=",     "<>",
     "=",       ">",         ">=",      "[",       "]"};
 
-const std::vector<char> Data::single_char_delimiter = {
+const std::vector<char> Data::single_delimiter = {
     '<', '>', ':', '/', '*', '.', '+', '-', '=', '(', ')', '[', ']', ';', ','};
 
-const std::vector<std::string> Data::double_char_delimiter = {
+const std::vector<std::string> Data::double_delimiter = {
     "*/", "..", "/*", ":=", "<=", "<>", ">="};
 
 const std::vector<std::string> Data::relation = {

@@ -1,4 +1,4 @@
-#include "Scanner.h"
+#include "Lexer.h"
 
 #include <algorithm>
 #include <iterator>
@@ -19,7 +19,7 @@ std::ostream &operator<<(std::ostream &out, const token &w) {
     return out;
 }
 
-token Scanner::getResult(const std::string &str, int index = VALUE_NONE) {
+token Lexer::getResult(const std::string &str, int index = VALUE_NONE) {
     if (str == UNDEFINED || str == "/*") {
         return token{Data::getCode(str), VALUE_NONE};
     } else if (str == INTEGER || str == STRING || str == IDENTIFIER) {
@@ -29,63 +29,63 @@ token Scanner::getResult(const std::string &str, int index = VALUE_NONE) {
     }
 }
 
-bool Scanner::isDigital(char c) {
+bool Lexer::isDigital(char c) {
     if (c >= '0' && c <= '9')
         return true;
     else
         return false;
 }
 
-bool Scanner::isString(char c) {
+bool Lexer::isString(char c) {
     if (c == '\'')
         return true;
     else
         return false;
 }
 
-bool Scanner::isDelimiter(char c) {
-    for (char x : Data::single_char_delimiter)
+bool Lexer::isDelimiter(char c) {
+    for (char x : Data::single_delimiter)
         if (c == x) return true;
 
     return false;
 }
 
-bool Scanner::isChar(char c) {
+bool Lexer::isChar(char c) {
     if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
         return true;
     else
         return false;
 }
 
-bool Scanner::isEmpty(char c) {
+bool Lexer::isEmpty(char c) {
     if (c == 9 || c == 10 || c == 13 || c == 32)
         return true;
     else
         return false;
 }
 
-bool Scanner::isDoubleCharDelimiter(const std::string &str) {
-    for (const std::string &s : Data::double_char_delimiter)
+bool Lexer::isDoubleCharDelimiter(const std::string &str) {
+    for (const std::string &s : Data::double_delimiter)
         if (str == s) return true;
 
     return false;
 }
 
-bool Scanner::isAnotation(const std::string &str) {
+bool Lexer::isAnotation(const std::string &str) {
     if (str == "/*")
         return true;
     else
         return false;
 }
 
-bool Scanner::isAnotationEnd(const std::string &str) {
+bool Lexer::isAnotationEnd(const std::string &str) {
     if (str == "*/")
         return true;
     else
         return false;
 }
 
-bool Scanner::isReserveWord(const std::string &str) {
+bool Lexer::isReserveWord(const std::string &str) {
     if (str.length() > MAX_RESERVE_WORD_LEN ||
         str.length() < MIN_RESERVE_WORD_LEN)
         return false;
@@ -97,7 +97,7 @@ bool Scanner::isReserveWord(const std::string &str) {
     return false;
 }
 
-token Scanner::identifier(const std::string &str, size_t &i) {
+token Lexer::identifier(const std::string &str, size_t &i) {
     size_t j = i + 1;
     for (; j < str.length(); ++j) {
         if (!isDigital(str[j]) && !isChar(str[j])) break;
@@ -113,7 +113,7 @@ token Scanner::identifier(const std::string &str, size_t &i) {
     }
 }
 
-token Scanner::delimiter(const std::string &str, size_t &i, unsigned r) {
+token Lexer::delimiter(const std::string &str, size_t &i, unsigned r) {
     if (str.length() > i + 1) {
         std::string substr = str.substr(i, 2);
         if (isDoubleCharDelimiter(substr)) {
@@ -137,7 +137,7 @@ token Scanner::delimiter(const std::string &str, size_t &i, unsigned r) {
     return getResult(str.substr(i++, 1));
 }
 
-token Scanner::integer(const std::string &str, size_t &i, unsigned r) {
+token Lexer::integer(const std::string &str, size_t &i, unsigned r) {
     size_t j = i + 1;
     for (; j < str.length(); ++j)
         if (!isDigital(str[j])) {
@@ -153,7 +153,7 @@ token Scanner::integer(const std::string &str, size_t &i, unsigned r) {
     return getResult(INTEGER, index);
 }
 
-token Scanner::string(const std::string &str, size_t &i, unsigned r) {
+token Lexer::string(const std::string &str, size_t &i, unsigned r) {
     size_t j = i + 1;
     for (; j < str.length(); ++j) {
         if (isString(str[j])) break;
@@ -170,7 +170,7 @@ token Scanner::string(const std::string &str, size_t &i, unsigned r) {
     }
 }
 
-token Scanner::scan(const std::string &str, size_t &i, unsigned r) {
+token Lexer::scan(const std::string &str, size_t &i, unsigned r) {
     for (; i < str.length(); ++i) {
         if (isEmpty(str[i]))
             continue;

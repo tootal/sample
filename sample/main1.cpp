@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-#include "Scanner.h"
+#include "Lexer.h"
 #include "Storage.h"
 
 void welcome() {
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
         Storage storage;
-        Scanner scanner(&storage);
+        Lexer scanner(&storage);
         std::cout << "词法分析结果: \n";
         unsigned count = 0;
         unsigned row = 0;

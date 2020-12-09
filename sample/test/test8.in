@@ -1,0 +1,5 @@
+program example4;
+var  A,B,C,D:integer;
+begin
+  A := true;
+end.
