@@ -1,81 +1,59 @@
-#include<fstream>
-#include<iostream>
-#include<string>
-#include"Parser.h"
+#include <fstream>
+#include <iostream>
+#include <string>
 
+#include "Parser.h"
 
-int lab2() {
-	std::string str, program;
-	Storage *storage = new Storage();
-	Parser test(storage);
-	std::ifstream is;
-	std::cout << "黄智权" << '\t' << "计算机科学与技术1班"
-		<< '\t' << "201836580388" << "\n\n";
-	std::cout << "请输入测试程序" << '\n';
-	std::cin >> program;
-	std::cin.get();
-	is.open(program);
-	if (is) {
-		std::cout << "\n语法分析、语义分析结果如下：\n";
-		try {
-			test.parse(is);
-		}
-		catch (string_error e) {
-			e.print(std::cerr);
-			delete storage;
-			std::cin.get();
-			return 1;
-		}
-		catch (anotation_error e) {
-			e.print(std::cerr);
-			delete storage;
-			std::cin.get();
-			return 1;
-		}
-		catch (character_error e) {
-			e.print(std::cerr);
-			delete storage;
-			std::cin.get();
-			return 1;
-		}
-		catch (word_error e) {
-			e.print(std::cerr);
-			delete storage;
-			std::cin.get();
-			return 1;
-		}
-		catch (syntax_error e) {
-			e.print(std::cerr);
-			std::cin.get();
-			delete storage;
-			return 1;
-		}
-		catch (type_error e) {
-			e.print(std::cerr);
-			std::cin.get();
-			delete storage;
-			return 1;
-		}
-		catch (declare_error e) {
-			e.print(std::cerr);
-			std::cin.get();
-			delete storage;
-			return 1;
-		}
-	}
-	else {
-		delete storage;
-		std::cerr << "文件操作失败" << '\n';
-		return 1;
-	}
-	test.printIntermediateCode(std::cout);
-	std::cout << "\n输入任意字符退出程序\n";
-	std::cin.get();
-	delete storage;
-	return 0;
+void welcome() {
+    std::cout << "编译原理实验 SAMPLE语言的语法、语义分析器\n"
+                 "作者: 黄智权\n"
+                 "班级: 计算机科学与技术1班\n"
+                 "学号: 201836580388\n";
 }
 
-
-int main() {
-	return lab2();
+int main(int argc, char *argv[]) {
+    welcome();
+    while (true) {
+        std::cout << "请输入测试文件名(直接回车退出程序): ";
+        std::string fileName;
+        std::getline(std::cin, fileName);
+        if (fileName.empty()) break;
+        std::ifstream in;
+        in.open(fileName);
+        if (!in) {
+            std::cout << "无法打开文件: " << fileName << '\n';
+            continue;
+        }
+        Storage storage;
+        Parser parser(&storage);
+        std::cout << "\n语法分析、语义分析结果如下：\n";
+        try {
+            parser.parse(in);
+        } catch (string_error e) {
+            e.print(std::cerr);
+            return 1;
+        } catch (anotation_error e) {
+            e.print(std::cerr);
+            return 1;
+        } catch (character_error e) {
+            e.print(std::cerr);
+            return 1;
+        } catch (word_error e) {
+            e.print(std::cerr);
+            return 1;
+        } catch (syntax_error e) {
+            e.print(std::cerr);
+            return 1;
+        } catch (type_error e) {
+            e.print(std::cerr);
+            return 1;
+        } catch (declare_error e) {
+            e.print(std::cerr);
+            return 1;
+        }
+        parser.printIntermediateCode(std::cout);
+        std::cout << std::endl;
+        in.close();
+    }
+    return 0;
 }

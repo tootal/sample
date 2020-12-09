@@ -37,8 +37,9 @@ int main(int argc, char *argv[]) {
                     token result = scanner.scan(str, i, row);
                     if (result.val_index != VALUE_NONE) {
                         ++count;
-                        std::cout << result << '\t';
+                        std::cout << result;
                         if (count % 5 == 0) std::cout << '\n';
+						else std::cout << "\t";
                     }
                 } catch (string_error e) {
                     e.print(std::cerr);
