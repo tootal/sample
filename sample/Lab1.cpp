@@ -5,11 +5,13 @@
 #include"Storage.h"
 
 
-int lab1() {
+
+int main(int argc, char *argv[]) {
 	std::string str, program;
-	Storage *storage = new Storage();
-	Scanner test(storage);
+	Storage storage;
+	Scanner test(&storage);
 	std::ifstream is;
+
 	std::cout << "黄智权" << '\t' << "计算机科学与技术1班"
 		<< '\t' << "201836580388" << "\n\n";
 	std::cout << "请输入测试程序" << '\n';
@@ -33,25 +35,21 @@ int lab1() {
 				}
 				catch (string_error e) {
 					e.print(std::cerr);
-					delete storage;
 					std::cin.get();
 					return 1;
 				}
 				catch (anotation_error e) {
 					e.print(std::cerr);
-					delete storage;
 					std::cin.get();
 					return 1;
 				}
 				catch (character_error e) {
 					e.print(std::cerr);
-					delete storage;
 					std::cin.get();
 					return 1;
 				}
 				catch (word_error e) {
 					e.print(std::cerr);
-					delete storage;
 					std::cin.get();
 					return 1;
 				}
@@ -61,13 +59,7 @@ int lab1() {
 		is.close();
 	}
 
-	delete storage;
 	std::cout << "\n输入任意字符退出程序\n";
 	std::cin.get();
 	return 0;
-}
-
-
-int main() {
-	return lab1();
 }
