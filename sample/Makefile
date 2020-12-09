@@ -1,11 +1,12 @@
 CC          = g++
 CFLAGS      = -std=c++17
-TARGET		= sample
 
-all: main.cpp
-	@$(CC) -o $(TARGET) $(CFLAGS) $^
-	@$(TARGET)
+lab1: Lab1.cpp Data.cpp Parser.cpp Scanner.cpp Storage.cpp
+	@$(CC) -o Lab1 $(CFLAGS) $^
+
+lab2: Lab2.cpp Data.cpp Parser.cpp Scanner.cpp Storage.cpp
+	@$(CC) -o Lab2 $(CFLAGS) $^
 
 clean:
-	del /f /q *.o $(TARGET)
+	del /f /q *.o Lab1.exe Lab2.exe
 
