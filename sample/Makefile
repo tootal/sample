@@ -4,7 +4,7 @@ TARGET		= sample
 
 all: main.cpp
 	@$(CC) -o $(TARGET) $(CFLAGS) $^
-	@$(TARGET) test/test2.in
+	@$(TARGET)
 
 clean:
 	del /f /q *.o $(TARGET)

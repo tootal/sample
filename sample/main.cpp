@@ -4,7 +4,7 @@
 #include <fstream>
 #include <cstdlib>
 
-#include "lexer.h"
+#include "Lexer.h"
 
 void welcome() {
     std::cout << 
@@ -43,9 +43,12 @@ bool handleFile(std::string &fileName, bool cmd = false) {
 	if (contents.empty()) return false;
 	Lexer lexer(contents);
 	auto outFileName = getOutputFileName(fileName);
-	if (cmd) lexer.outputToken(outFileName);
-	else lexer.printToken();
-	std::cout << "handle " << fileName << " ok, check " << outFileName << " for result.\n";
+	if (cmd) {
+        lexer.outputToken(outFileName);
+	    std::cout << "handle " << fileName << " ok, check " << outFileName << " for result.\n";
+    } else {
+        lexer.printToken();
+    }
 	return true;
 }
 
@@ -66,6 +69,10 @@ int main(int argc, char *argv[]) {
         std::string fileName = "test2.in";
         std::getline(std::cin, fileName);
         // std::cout << "File Content: \n";
+        if (fileName.empty()) {
+            std::cout << "Bye!\n";
+            break;
+        }
         if (!handleFile(fileName)) {
 			std::cout << "Error!\n";
 		}

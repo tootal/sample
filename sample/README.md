@@ -1,83 +1,82 @@
-# SAMPLE语言定义
-## 字符集定义
+# SAMPLE LANGUAGE DESCRIPTION
+## Character Define
 
-1．`<字符集>` → `<字母>│<数字>│<单界符>`
-2．`<字母>` → `A│B│…│Z│a│b│…│z`
-3．`<数字>` → `0│1│2│…│9`
-4．`<单界符>` → `+│-│*│/│=│<│>│(│)│[│]│:│. │; │, │'`
+1．`<character_set>` → `<letter>│<digit>│<single_delimiter>`
+2．`<letter>` → `A│B│…│Z│a│b│…│z`
+3．`<digit>` → `0│1│2│…│9`
+4．`<single_delimiter>` → `+│-│*│/│=│<│>│(│)│[│]│:│. │; │, │'`
 
-## 单词集定义
+## Word Define
 
-5．`<单词集>` → `<保留字>│<双界符>│<标识符>│<常数>│<单界符>`
-6．`<保留字>` → `and│array│begin│bool│call│case│char│constant│dim│do│else│end│false│for│if│input│integer│not│of│or│output│procedure│program│read│real│repeat│set│stop│then│to│true│until│var│while│write`
-7．`<双界符>` → `<>│<=│>=│:= │/*│*/│..`
-8．`<标识符>` → `<字母>│<标识符> <数字>│<标识符> <字母>`
-9．`<常数>` → `<整数>│<布尔常数>│<字符常数>`
-10．`<整数>` → `<数字>│<整数> <数字>`
-11．`<布尔常数>` → `true│false`
-12．`<字符常数>` → `' 除 {'} 外的任意字符串 '`
+5．`<word_set>` → `<reserved_word>│<double_delimiter>│<identifier>│<constant>│<single_delimiter>`
+6．`<reserved_word>` → `and│array│begin│bool│call│case│char│constant│dim│do│else│end│false│for│if│input│integer│not│of│or│output│procedure│program│read│real│repeat│set│stop│then│to│true│until│var│while│write`
+7．`<double_delimiter>` → `<>│<=│>=│:= │/*│*/│..`
+8．`<identifier>` → `<letter>│<identifier> <digit>│<identifier> <letter>`
+9．`<constant>` → `<integer>│<boolean_constant>│<character_constant>`
+10．`<integer>` → `<digit>│<integer> <digit>`
+11．`<boolean_constant>` → `true│false`
+12．`<character_constant>` → `'any string except {'}'`
 
-## 数据类型定义
+## Type Define
 
-13．`<类型>` → `integer│bool│char`
+13．`<type>` → `integer│bool│char`
 
-## 表达式定义
+## Expression Define
 
-14．`<表达式>` → `<算术表达式>│<布尔表达式>│<字符表达式>`
-15．`<算术表达式>` → `<算术表达式> + <项>│<算术表达式> - <项>│<项>`
-16．`<项>` → `<项> * <因子>│<项> / <因子>│<因子>`
-17．`<因子>` → `<算术量>│- <因子>`
-18．`<算术量>` → `<整数>│<标识符>│( <算术表达式> )`
-19．`<布尔表达式>` → `<布尔表达式> or <布尔项>│<布尔项>`
-20．`<布尔项>` → `<布尔项> and <布因子>│<布因子>`
-21．`<布因子>` → `<布尔量>│not <布因子>`
-22．`<布尔量>` → `<布尔常量>│<标识符>│( <布尔表达式> )│<标识符> <关系符> <标识符>│<算术表达式> <关系符> <算术表达式>`
-23．`<关系符>` → `<│<>│<=│>=│>│=`
-24．`<字符表达式>` → `<字符常数>│<标识符>`
+14．`<expression>` → `<arithmetic_expression>│<boolean_expression>│<character_expression>`
+15．`<arithmetic_expression>` → `<arithmetic_expression> + <arithmetic_item>│<arithmetic_expression> - <arithmetic_item>│<arithmetic_item>`
+16．`<arithmetic_item>` → `<arithmetic_item> * <arithmetic_factor>│<arithmetic_item> / <arithmetic_factor>│<arithmetic_factor>`
+17．`<arithmetic_factor>` → `<arithmetic_variable>│- <arithmetic_factor>`
+18．`<arithmetic_variable>` → `<integer>│<identifier>│( <arithmetic_expression> )`
+19．`<boolean_expression>` → `<boolean_expression> or <boolean_item>│<boolean_item>`
+20．`<boolean_item>` → `<boolean_item> and <boolean_factor>│<boolean_factor>`
+21．`<boolean_factor>` → `<boolean_variable>│not <boolean_factor>`
+22．`<boolean_variable>` → `<boolean_constant>│<identifier>│( <boolean_expression> )│<identifier> <relation_word> <identifier>│<arithmetic_expression> <relation_word> <arithmetic_expression>`
+23．`<relation_word>` → `<│<>│<=│>=│>│=`
+24．`<character_expression>` → `<character_constant>│<identifier>`
 
-## 语句定义
+## Statement Define
 
-25．`<语句>` → `<赋值句>│<if句>│<while句>│<repeat句>│<复合句>`
-26．`<赋值句>` → `<标识符> := <算术表达式>`
-27．`<if句>`→ `if <布尔表达式> then <语句>│if <布尔表达式> then <语句> else <语句>`
-28．`<while句>` → `while <布尔表达式> do <语句>`
-29．`<repeat句>` → `repeat <语句> until <布尔表达式>`
-30．`<复合句>` → `begin <语句表> end`
-31．`<语句表>` → `<语句> ;<语句表>│<语句>`
+25．`<statement>` → `<assignment_statement>│<if_statement>│<while_statement>│<repeat_statement>│<compound_statement>`
+26．`<assignment_statement>` → `<identifier> := <arithmetic_expression>`
+27．`<if_statement>`→ `if <boolean_expression> then <statement>│if <boolean_expression> then <statement> else <statement>`
+28．`<while_statement>` → `while <boolean_expression> do <statement>`
+29．`<repeat_statement>` → `repeat <statement> until <boolean_expression>`
+30．`<compound_statement>` → `begin <statement_list> end`
+31．`<statement_list>` → `<statement> ;<statement_list>│<statement>`
 
-## 程序定义
+## Program Define
 
-32．`<程序>` → `program <标识符> ;<变量说明> <复合语句> .`
-33．`<变量说明>` → `var <变量定义>│ε`
-34．`<变量定义>` → `<标识符表> :<类型> ;<变量定义>│<标识符表> : <类型> ;`
-35．`<标识符表>` → `<标识符> , <标识符表>│<标识符>`
+32．`<program>` → `program <identifier> ;<variable_declaration> <compound_statement> .`
+33．`<variable_declaration>` → `var <variable_define>│ε`
+34．`<variable_define>` → `<identifier_list> :<type> ;<variable_define>│<identifier_list> : <type> ;`
+35．`<identifier_list>` → `<identifier> , <identifier_list>│<identifier>`
 
-## SIMPLE语言单词编码
+## SIMPLE Word Encode
 
-    
 
-|  单  词  | 种别码 |  单  词   | 种别码 | 单  词 | 种别码 |
-| -------- | ----- | --------- | ----- | ------ | ----- |
-| and      | 1     | output    | 21    | `*`    | 41    |
-| array    | 2     | procedure | 22    | `*/`   | 42    |
-| begin    | 3     | program   | 23    | +      | 43    |
-| bool     | 4     | read      | 24    | ,      | 44    |
-| call     | 5     | real      | 25    | -      | 45    |
-| case     | 6     | repeat    | 26    | .      | 46    |
-| char     | 7     | set       | 27    | ..     | 47    |
-| constant | 8     | stop      | 28    | /      | 48    |
-| dim      | 9     | then      | 29    | `/*`   | 49    |
-| do       | 10    | to        | 30    | :      | 50    |
-| else     | 11    | TRUE      | 31    | :=     | 51    |
-| end      | 12    | until     | 32    | ;      | 52    |
-| FALSE    | 13    | var       | 33    | `<`    | 53    |
-| for      | 14    | while     | 34    | `<=`   | 54    |
-| if       | 15    | write     | 35    | `<>`   | 55    |
-| input    | 16    | 标识符     | 36    | =      | 56    |
-| integer  | 17    | 整数      | 37    | `>`    | 57    |
-| not      | 18    | 字符常数   | 38    | `>=`   | 58    |
-| of       | 19    | (         | 39    | `[`    | 59    |
-| or       | 20    | )         | 40    | `]`    | 60    |
+|   Word   | id  |        Word        | id  | Word | id  |
+| -------- | --- | ------------------ | --- | ---- | --- |
+| and      | 1   | output             | 21  | `*`  | 41  |
+| array    | 2   | procedure          | 22  | `*/` | 42  |
+| begin    | 3   | program            | 23  | +    | 43  |
+| bool     | 4   | read               | 24  | ,    | 44  |
+| call     | 5   | real               | 25  | -    | 45  |
+| case     | 6   | repeat             | 26  | .    | 46  |
+| char     | 7   | set                | 27  | ..   | 47  |
+| constant | 8   | stop               | 28  | /    | 48  |
+| dim      | 9   | then               | 29  | `/*` | 49  |
+| do       | 10  | to                 | 30  | :    | 50  |
+| else     | 11  | TRUE               | 31  | :=   | 51  |
+| end      | 12  | until              | 32  | ;    | 52  |
+| FALSE    | 13  | var                | 33  | `<`  | 53  |
+| for      | 14  | while              | 34  | `<=` | 54  |
+| if       | 15  | write              | 35  | `<>` | 55  |
+| input    | 16  | identifier         | 36  | =    | 56  |
+| integer  | 17  | integer            | 37  | `>`  | 57  |
+| not      | 18  | character_constant | 38  | `>=` | 58  |
+| of       | 19  | (                  | 39  | `[`  | 59  |
+| or       | 20  | )                  | 40  | `]`  | 60  |
 
 
 ## 实验一：设计SAMPLE语言的词法分析器
@@ -105,4 +104,7 @@ c)输出四元式中间代码（样式见样板输出3和4）。
 d)能发现程序的语法错误并输出出错信息。
 
 测试样板程序与样板输出:
-测试程序3：程序名TEST4    
+测试程序3：程序名TEST4，参考文件`test3.in`
+样板输出3：（要求在屏幕上显示)，参考文件`test3.ans`
+测试程序4：程序名TEST5，参考文件`test4.in`
+样板输出4：（要求在屏幕上显示）参考文件`test4.ans`

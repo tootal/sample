@@ -7,7 +7,7 @@
 #include <cctype>
 #include <cassert>
 
-#include "token.h"
+#include "Token.h"
 #include "debug.h"
 
 class Lexer {
@@ -35,7 +35,7 @@ public:
             ouf << tokenint << " , ";
             if (p.second == 0) ouf << "- )";
             else ouf << p.second << " )";
-            if ((j+1) % 5 == 0) ouf << '\n';
+            if ((j+1) % 5 == 0 || j == pairs.size() - 1) ouf << '\n';
             else if (j != pairs.size() - 1) ouf << "\t\t";
         }
     }
@@ -46,10 +46,9 @@ public:
             std::cout << "(";
             std::cout.width(2);
             std::cout << tokenint << " , ";
-            if (p.second == 0) std::cout << "-)";
-            else std::cout << p.second << " )";
-            if ((j+1) % 5 == 0) std::cout << '\n';
-            else std::cout << "\t\t";
+            std::cout << p.second << " )";
+            if ((j+1) % 5 == 0 || j == pairs.size() - 1) std::cout << '\n';
+            else if (j != pairs.size() - 1) std::cout << "\t\t";
         }
     }
     void next(size_t x) {
