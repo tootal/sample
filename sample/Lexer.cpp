@@ -8,14 +8,14 @@ using iter = std::vector<std::string>::const_iterator;
 
 std::ostream &operator<<(std::ostream &out, const token &w) {
     out << "(";
-	out.width(2);
-	out << w.type_index;
-	out << " , ";
+    out.width(2);
+    out << w.type_index;
+    out << " , ";
     if (w.val_index == VALUE_WORD)
         out << "-";
     else
         out << w.val_index+1;
-	out << " )";
+    out << " )";
     return out;
 }
 

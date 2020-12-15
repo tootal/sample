@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
         std::cout << "请输入测试文件名(直接回车退出程序): ";
         std::string fileName;
         std::getline(std::cin, fileName);
-		if (fileName.empty()) break;
+        if (fileName.empty()) break;
         std::ifstream in;
         in.open(fileName);
         if (!in) {
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
                         ++count;
                         std::cout << result;
                         if (count % 5 == 0) std::cout << '\n';
-						else std::cout << "\t";
+                        else std::cout << "\t";
                     }
                 } catch (std::string &msg) {
                     std::cerr << msg << '\n';
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
             }
             ++row;
         }
-		std::cout << std::endl;
+        std::cout << std::endl;
         in.close();
         out: 0;
     }

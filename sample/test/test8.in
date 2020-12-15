@@ -1,5 +1,5 @@
 program example4;
-var  A,B,C,D:integer;
+var  A : bool;
 begin
   A := true;
 end.
