@@ -288,10 +288,9 @@ bool Parser::assignmentStatement(size_t &i) {
 
 			if (!storage->isSameType(
 				Tokens[mark - 1].val_index, ide))
-				throw type_error(getRow(mark - 1), 
-					storage->getName(
-						Tokens[mark - 1].val_index));
-
+				throw "第" + std::to_string(getRow(mark - 1))
+				+ "行: 变量 `" + storage->getName(Tokens[mark - 1].val_index)
+				+ "` 类型错误。";
 			else {
 				gen(":=", ide,
 					EMPTY, Tokens[mark - 1].val_index);
@@ -544,10 +543,9 @@ bool Parser::arithmeticUnit(size_t &i, int &ide) {
 				return true;
 			}
 			else
-				throw declare_error(getRow(i), 
-					storage->getName(
-						Tokens[i].val_index));
-
+				throw "第" + std::to_string(getRow(i))
+				+ "行: 变量 `" + storage->getName(Tokens[i].val_index)
+				+ "` 未声明。";
 		}
 		else if (isEqual(Tokens[i], INTEGER)) {
 			
@@ -665,9 +663,9 @@ bool Parser::booleanUnit(size_t &i,
 			return true;
 		}
 		else
-			throw type_error(getRow(i), 
-				storage->getName(
-					Tokens[i].val_index));
+			throw "第" + std::to_string(getRow(i))
+			+ "行: 变量 `" + storage->getName(Tokens[i].val_index)
+			+ "` 类型错误。";
 	}
 
 	else if (i < Tokens.size()) {
@@ -700,7 +698,9 @@ bool Parser::booleanUnit(size_t &i,
 			if (!isBoolType(storage->getType(
 				Tokens[i].val_index)) && !isIntType(
 					storage->getType(Tokens[i].val_index)))
-				throw type_error(getRow(i), storage->getName(Tokens[i].val_index));
+				throw "第" + std::to_string(getRow(i))
+				+ "行: 变量 `" + storage->getName(Tokens[i].val_index)
+				+ "` 类型错误。";
 
 			else {
 				tl = IntermediateCode.size();
@@ -763,8 +763,9 @@ void Parser::parse(std::ifstream &is) {
 	size_t i = 0;
 	if (isProgram(i) && program(i))
 		return;
-	else
-		throw syntax_error(getRow(i));
+	else {
+		throw "第" + std::to_string(getRow(i)) + "行: 语法错误。";
+	}
 }
 
 

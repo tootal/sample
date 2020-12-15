@@ -29,27 +29,9 @@ int main(int argc, char *argv[]) {
         std::cout << "\n语法分析、语义分析结果如下：\n";
         try {
             parser.parse(in);
-        } catch (string_error e) {
-            e.print(std::cerr);
-            return 1;
-        } catch (anotation_error e) {
-            e.print(std::cerr);
-            return 1;
-        } catch (character_error e) {
-            e.print(std::cerr);
-            return 1;
-        } catch (word_error e) {
-            e.print(std::cerr);
-            return 1;
-        } catch (syntax_error e) {
-            e.print(std::cerr);
-            return 1;
-        } catch (type_error e) {
-            e.print(std::cerr);
-            return 1;
-        } catch (declare_error e) {
-            e.print(std::cerr);
-            return 1;
+        } catch (const std::string &msg) {
+            std::cerr << msg << '\n';
+            continue;
         }
         parser.printIntermediateCode(std::cout);
         std::cout << std::endl;

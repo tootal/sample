@@ -8,48 +8,12 @@
 #define EMPTY -1
 #define EMPTY_CHAIN 0
 
+// 四元式
 struct quaternary {
     const std::string ope;
     int ide_l;
     int ide_r;
     int ide;
-};
-
-class syntax_error : public std::runtime_error {
-   public:
-    const unsigned pos;
-
-    syntax_error(unsigned pos) : std::runtime_error("语法错误"), pos(pos) {}
-
-    void print(std::ostream &out) {
-        out << "第" << pos << "行: " << what() << "\n";
-    }
-};
-
-class type_error : public std::runtime_error {
-   public:
-    const unsigned pos;
-    const std::string name;
-
-    type_error(unsigned pos, const std::string &name)
-        : std::runtime_error("变量类型错误"), pos(pos), name(name) {}
-
-    void print(std::ostream &out) {
-        out << "第" << pos << "行: " << what() << " " << name << " \n";
-    }
-};
-
-class declare_error : public std::runtime_error {
-   public:
-    const unsigned pos;
-    const std::string name;
-
-    declare_error(unsigned pos, const std::string &name)
-        : std::runtime_error("未声明变量"), pos(pos), name(name) {}
-
-    void print(std::ostream &out) {
-        out << "第" << pos << "行: " << what() << " " << name << " \n";
-    }
 };
 
 class Parser {

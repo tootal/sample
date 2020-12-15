@@ -41,28 +41,16 @@ int main(int argc, char *argv[]) {
                         if (count % 5 == 0) std::cout << '\n';
 						else std::cout << "\t";
                     }
-                } catch (string_error e) {
-                    e.print(std::cerr);
-                    std::cin.get();
-                    return 1;
-                } catch (anotation_error e) {
-                    e.print(std::cerr);
-                    std::cin.get();
-                    return 1;
-                } catch (character_error e) {
-                    e.print(std::cerr);
-                    std::cin.get();
-                    return 1;
-                } catch (word_error e) {
-                    e.print(std::cerr);
-                    std::cin.get();
-                    return 1;
+                } catch (std::string &msg) {
+                    std::cerr << msg << '\n';
+                    goto out;
                 }
             }
             ++row;
         }
 		std::cout << std::endl;
         in.close();
+        out: 0;
     }
     return 0;
 }

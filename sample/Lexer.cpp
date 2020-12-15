@@ -124,9 +124,11 @@ token Lexer::delimiter(const std::string &str, size_t &i, unsigned r) {
                         i = j + 2;
                         return getResult("/*");
                     }
-                throw anotation_error(i, r);
+                throw "第" + std::to_string(r) + "行第" + std::to_string(i) 
+                    + "列: 注释界符缺失。";
             } else if (isAnotationEnd(substr))
-                throw word_error(i, r, str[i]);
+                throw "第" + std::to_string(r) + "行第" + std::to_string(i) 
+                    + "列: 不应出现字符" + std::string(1, str[i]);
             else {
                 i += 2;
                 return getResult(substr);
@@ -144,7 +146,8 @@ token Lexer::integer(const std::string &str, size_t &i, unsigned r) {
             if (isDelimiter(str[j]) || isEmpty(str[j]))
                 break;
             else
-                throw word_error(j, r, str[j]);
+                throw "第" + std::to_string(r) + "行第" + std::to_string(j) 
+                    + "列: 不应出现字符" + std::string(1, str[j]);
         }
 
     std::string value = str.substr(i, j - i);
@@ -160,7 +163,8 @@ token Lexer::string(const std::string &str, size_t &i, unsigned r) {
     }
 
     if (j == str.length())
-        throw string_error(i, r);
+        throw "第" + std::to_string(r) + "行第" + std::to_string(i) 
+            + "列: 字符串引号缺失。";
 
     else {
         std::string value = str.substr(i, j - i + 1);
@@ -188,7 +192,8 @@ token Lexer::scan(const std::string &str, size_t &i, unsigned r) {
             return delimiter(str, i, r);
 
         else
-            throw character_error(i, r, str[i]);
+            throw "第" + std::to_string(r) + "行第" + std::to_string(i) 
+                    + "列: 出现非法字符" + std::string(1, str[i]);
     }
 
     return getResult(UNDEFINED);
