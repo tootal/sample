@@ -44,7 +44,7 @@ bool Lexer::isString(char c) {
 }
 
 bool Lexer::isDelimiter(char c) {
-    for (char x : Data::single_delimiter)
+    for (char x : Data::singleDelimiter())
         if (c == x) return true;
 
     return false;
@@ -65,7 +65,7 @@ bool Lexer::isEmpty(char c) {
 }
 
 bool Lexer::isDoubleCharDelimiter(const std::string &str) {
-    for (const std::string &s : Data::double_delimiter)
+    for (const std::string &s : Data::doubleDelimiter())
         if (str == s) return true;
 
     return false;

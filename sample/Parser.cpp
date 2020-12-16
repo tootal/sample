@@ -52,7 +52,7 @@ unsigned Parser::merge(unsigned p1, unsigned p2) {
 
 bool Parser::isType(size_t code) {
 
-    for (const std::string &str : Data::type)
+    for (const std::string &str : Data::type())
         if(code == Data::getCode(str))
             return true;
 
@@ -80,7 +80,7 @@ bool Parser::isIntType(size_t code) {
 
 bool Parser::isRelation(size_t code) {
 
-    for (const std::string &str : Data::relation)
+    for (const std::string &str : Data::relationWord())
         if (code == Data::getCode(str))
             return true;
 
@@ -90,7 +90,7 @@ bool Parser::isRelation(size_t code) {
 // is true or false
 bool Parser::isBoolean(size_t code) {
 
-    for (const std::string &str : Data::boolean)
+    for (const std::string &str : Data::booleanConstant())
         if (code == Data::getCode(str))
             return true;
 
