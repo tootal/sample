@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
         Storage storage;
-        Parser parser(&storage);
+        Parser parser(storage);
         std::cout << "\n语法分析、语义分析结果如下：\n";
         try {
             parser.parse(in);

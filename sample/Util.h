@@ -15,3 +15,21 @@ public:
     // 检查容器中是否包含x
     auto contains(const T &x) const { return find(x) != cend(); }
 };
+
+class String : public std::string {
+public:
+    String() : std::string() {}
+    String(const char *s) : std::string(s) {}
+    String(std::string s) : std::string(s) {}
+};
+String to_string(const char *x) { return String(x); }
+String to_string(const std::string &x) { return String(x); }
+String to_string(const String &x) { return x; }
+template <typename T>
+String to_string(T x) {
+    return String(std::to_string(x));
+}
+template <typename Head, typename... Tail>
+String to_string(Head H, Tail... T) {
+    return to_string(H) + to_string(T...);
+}

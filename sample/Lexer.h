@@ -13,10 +13,21 @@
 // 词法单元
 struct Token {
     unsigned type_index;
+    // 保存符号表中的下标
     int val_index;
-    // 比较Token是否相等
-    bool operator==(const std::string &str) {
-        return type_index == Data::getCode(str);
+    // 比较运算符
+    bool operator==(const String &str) const {
+        // 符号集合判断
+        if (str == RELATIONWORD) {
+            return Data::relationWord().contains(Data::getValue(type_index));
+        } else if (str == BOOLEANCONSTANT) {
+            return Data::booleanConstant().contains(Data::getValue(type_index));
+        } else {
+            return type_index == Data::getCode(str);
+        }
+    }
+    bool operator!=(const String &str) const {
+        return !(type_index == Data::getCode(str));
     }
     // 格式化输出
     friend std::ostream &operator<<(std::ostream &out, const Token &w) {
@@ -35,8 +46,8 @@ struct Token {
 
 // 词法分析器
 class Lexer {
-    // 符号表指针
-    Storage *storage;
+    // 符号表引用
+    Storage &storage;
 
     Token getResult(const std::string &str, int index = VALUE_NONE) {
         if (str == UNDEFINED || str == "/*") {
@@ -85,7 +96,7 @@ class Lexer {
         if (isReserveWord(ide))
             return getResult(ide);
         else {
-            int index = storage->addIdentifer(ide);
+            int index = storage.get(ide);
             return getResult(IDENTIFIER, index);
         }
     }
@@ -127,7 +138,7 @@ class Lexer {
             }
 
         std::string value = str.substr(i, j - i);
-        int index = storage->addIdentifer(value);
+        int index = storage.get(value);
         i = j;
         return getResult(INTEGER, index);
     }
@@ -143,14 +154,14 @@ class Lexer {
 
         else {
             std::string value = str.substr(i, j - i + 1);
-            int index = storage->addIdentifer(value);
+            int index = storage.get(value);
             i = j + 1;
             return getResult(STRING, index);
         }
     }
 
 public:
-    Lexer(Storage *storage) : storage(storage) {}
+    Lexer(Storage &storage) : storage(storage) {}
     Token scan(const std::string &str, size_t &i, unsigned r) {
         auto len = str.length();
         for (; i < len; ++i) {

@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
         Storage storage;
-        Lexer scanner(&storage);
+        Lexer scanner(storage);
         std::cout << "词法分析结果: \n";
         unsigned count = 0;
         unsigned row = 0;
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
         while (std::getline(in, str)) {
             for (size_t i = 0; i < str.length();) {
                 try {
-                    token result = scanner.scan(str, i, row);
+                    Token result = scanner.scan(str, i, row);
                     if (result.val_index != VALUE_NONE) {
                         ++count;
                         std::cout << result;

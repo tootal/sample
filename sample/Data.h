@@ -1,15 +1,23 @@
 #pragma once
 #include "Util.h"
 
+// 标识符
 #define IDENTIFIER "<identifier>"
+// 整数
 #define INTEGER "<integer>"
+// 字符串
 #define STRING "<string>"
-#define UNDEFINED "<empty>"
+// 未定义字符
+#define UNDEFINED "<undefined>"
 #define MAX_RESERVE_WORD_LEN 9
 #define MIN_RESERVE_WORD_LEN 2
 #define FIRST_RESERVE_WORD 1
 #define LAST_RESERVE_WORD 35
 
+// 关系运算符
+#define RELATIONWORD "<relation_word>"
+// 布尔常数
+#define BOOLEANCONSTANT "<boolean_constant>"
 
 class Data {
 public:

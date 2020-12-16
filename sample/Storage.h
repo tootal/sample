@@ -1,75 +1,50 @@
 #pragma once
 #include <string>
 #include <vector>
+
 #define TEMPORARY_VARIABLE "<T>"
 
 // 标识符
-struct ide {
+struct Identifer {
+    // 标识符名
     std::string name = "";
+    // 标识符类型
     unsigned type = 0;
-    bool is_declare = false;
-    ide(const std::string &name_, unsigned type_, bool is_declare_) 
-    : name(name_), type(type_), is_declare(is_declare_) {}
+    // 是否声明
+    bool declared = false;
+    Identifer(const std::string &name_, unsigned type_, bool declared_)
+        : name(name_), type(type_), declared(declared_) {}
+    // 临时标识符(从1开始编号)
+    static Identifer tempIdentifer() {
+        static int count = 0;
+        count++;
+        return {"T" + std::to_string(count), 0, true};
+    }
 };
 
 // 符号表
 class Storage {
-    std::vector<ide> Identifers;
-    // 临时变量开始编号
-    unsigned temp_count = 1;
+    Vector<Identifer> identifers;
 
 public:
-    // 添加标识符，返回id
-    unsigned addIdentifer(const std::string &val) {
-        if (val == TEMPORARY_VARIABLE) {
-            Identifers.emplace_back("T" + std::to_string(temp_count), 0, true);
-            ++temp_count;
-            return Identifers.size() - 1;
+    // 通过下标访问符号表
+    auto &operator[](size_t i) { return identifers[i]; }
+    // 通过符号名访问符号表，不存在则自动添加
+    auto &operator[](const std::string &name) { return identifers[get(name)]; }
+    // 通过符号名访问符号表，不存在则自动添加，返回下标
+    size_t get(const std::string &name) {
+        if (name == TEMPORARY_VARIABLE) {
+            identifers.push_back(Identifer::tempIdentifer());
+            return identifers.size() - 1;
         }
-
-        unsigned i;
-        for (i = 0; i < Identifers.size(); ++i)
-            if (val == Identifers[i].name) break;
-
-        if (i == Identifers.size()) Identifers.push_back(ide{val, 0, false});
-
+        size_t i;
+        for (i = 0; i < identifers.size(); ++i)
+            if (name == identifers[i].name) break;
+        if (i == identifers.size()) {
+            identifers.emplace_back(name, 0, false);
+            return identifers.size() - 1;
+        }
         return i;
     }
-    void setDeclare(unsigned i) {
-        if (i < Identifers.size()) Identifers[i].is_declare = true;
-    }
-    void setType(unsigned i, unsigned type) {
-        if (i < Identifers.size()) Identifers[i].type = type;
-    }
-
-    bool isDeclare(unsigned i) {
-        if (i < Identifers.size())
-            return Identifers[i].is_declare;
-        else
-            return false;
-    }
-    bool isSameType(unsigned i, unsigned j) {
-        if (i < Identifers.size() && j < Identifers.size()) {
-            if (i == j || Identifers[i].type == Identifers[j].type)
-                return true;
-            else
-                return false;
-        } else
-            return false;
-    }
-
-    unsigned getType(unsigned i) {
-        if (i < Identifers.size())
-            return Identifers[i].type;
-        else
-            return 0;
-    }
-    std::string getName(unsigned i) {
-        if (i < Identifers.size())
-            return Identifers[i].name;
-        else
-            return std::string();
-    }
-
-    void clear() { Identifers.clear(); }
+    void clear() { identifers.clear(); }
 };
