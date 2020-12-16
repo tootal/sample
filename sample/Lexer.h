@@ -10,10 +10,16 @@
 #define VALUE_WORD -2
 #define VALUE_NONE -1
 
-struct token {
+// 词法单元
+struct Token {
     unsigned type_index;
     int val_index;
-    friend std::ostream &operator<<(std::ostream &out, const token &w) {
+    // 比较Token是否相等
+    bool operator==(const std::string &str) {
+        return type_index == Data::getCode(str);
+    }
+    // 格式化输出
+    friend std::ostream &operator<<(std::ostream &out, const Token &w) {
         out << "(";
         out.width(2);
         out << w.type_index;
@@ -32,13 +38,13 @@ class Lexer {
     // 符号表指针
     Storage *storage;
 
-    token getResult(const std::string &str, int index = VALUE_NONE) {
+    Token getResult(const std::string &str, int index = VALUE_NONE) {
         if (str == UNDEFINED || str == "/*") {
-            return token{Data::getCode(str), VALUE_NONE};
+            return {Data::getCode(str), VALUE_NONE};
         } else if (str == INTEGER || str == STRING || str == IDENTIFIER) {
-            return token{Data::getCode(str), index};
+            return {Data::getCode(str), index};
         } else {
-            return token{Data::getCode(str), VALUE_WORD};
+            return {Data::getCode(str), VALUE_WORD};
         }
     }
 
@@ -68,7 +74,7 @@ class Lexer {
         return false;
     }
 
-    token identifier(const std::string &str, size_t &i) {
+    Token identifier(const std::string &str, size_t &i) {
         size_t j = i + 1;
         for (; j < str.length(); ++j) {
             if (!isdigit(str[j]) && !isalpha(str[j])) break;
@@ -83,7 +89,7 @@ class Lexer {
             return getResult(IDENTIFIER, index);
         }
     }
-    token delimiter(const std::string &str, size_t &i, unsigned r) {
+    Token delimiter(const std::string &str, size_t &i, unsigned r) {
         if (str.length() > i + 1) {
             std::string substr = str.substr(i, 2);
             if (isDoubleCharDelimiter(substr)) {
@@ -108,7 +114,7 @@ class Lexer {
         }
         return getResult(str.substr(i++, 1));
     }
-    token integer(const std::string &str, size_t &i, unsigned r) {
+    Token integer(const std::string &str, size_t &i, unsigned r) {
         size_t j = i + 1;
         for (; j < str.length(); ++j)
             if (!isdigit(str[j])) {
@@ -125,7 +131,7 @@ class Lexer {
         i = j;
         return getResult(INTEGER, index);
     }
-    token string(const std::string &str, size_t &i, unsigned r) {
+    Token string(const std::string &str, size_t &i, unsigned r) {
         size_t j = i + 1;
         for (; j < str.length(); ++j) {
             if (isString(str[j])) break;
@@ -145,7 +151,7 @@ class Lexer {
 
 public:
     Lexer(Storage *storage) : storage(storage) {}
-    token scan(const std::string &str, size_t &i, unsigned r) {
+    Token scan(const std::string &str, size_t &i, unsigned r) {
         auto len = str.length();
         for (; i < len; ++i) {
             if (isspace(str[i]))

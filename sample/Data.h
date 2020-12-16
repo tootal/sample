@@ -1,8 +1,5 @@
 #pragma once
-#include <algorithm>
-#include <map>
-#include <string>
-#include <vector>
+#include "Util.h"
 
 #define IDENTIFIER "<identifier>"
 #define INTEGER "<integer>"
@@ -13,10 +10,11 @@
 #define FIRST_RESERVE_WORD 1
 #define LAST_RESERVE_WORD 35
 
+
 class Data {
 public:
-    using CharList = const std::vector<char>;
-    using StringList = const std::vector<std::string>;
+    using CharList = const Vector<char>;
+    using StringList = const Vector<std::string>;
     static CharList& singleDelimiter() {
         static CharList single_delimiter{'<', '>', ':', '/', '*', '.', '+', '-',
                                          '=', '(', ')', '[', ']', ';', ','};
@@ -54,10 +52,8 @@ public:
         static StringList types{"integer", "bool", "char"};
         return types;
     }
-
     static unsigned getCode(const std::string& word) {
-        auto pos =
-            std::find(codingSchedule().cbegin(), codingSchedule().cend(), word);
+        auto pos = codingSchedule().find(word);
         if (pos != codingSchedule().cend())
             return pos - codingSchedule().cbegin();
         else
