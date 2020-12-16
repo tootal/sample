@@ -450,7 +450,7 @@ bool Parser::arithmeticExpression(size_t &i, int &ide) {
             int ide_r = EMPTY;
             if (arithmeticExpression(++i, ide_r)) {
                 int index = storage->
-                    setIdentifer(TEMPORARY_VARIABLE);
+                    addIdentifer(TEMPORARY_VARIABLE);
                 storage->setType(index, 
                     storage->getType(ide));
                 gen(Data::getValue(Tokens[mark].
@@ -483,7 +483,7 @@ bool Parser::item(size_t &i, int &ide) {
 
             if (item(++i, ide_r)) {
                 int index = storage->
-                    setIdentifer(TEMPORARY_VARIABLE);
+                    addIdentifer(TEMPORARY_VARIABLE);
                 storage->setType(index,
                     storage->getType(ide));
                 gen(Data::getValue(Tokens[mark].
@@ -513,7 +513,7 @@ bool Parser::divisor(size_t &i, int &ide) {
 
         if (divisor(++i, ide)) {
             int index = storage->
-                setIdentifer(TEMPORARY_VARIABLE);
+                addIdentifer(TEMPORARY_VARIABLE);
             storage->setType(index, 
                 storage->getType(ide));
             gen(Data::getValue(Tokens[mark].

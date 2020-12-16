@@ -108,7 +108,7 @@ token Lexer::identifier(const std::string &str, size_t &i) {
     if (isReserveWord(ide))
         return getResult(ide);
     else {
-        int index = storage->setIdentifer(ide);
+        int index = storage->addIdentifer(ide);
         return getResult(IDENTIFIER, index);
     }
 }
@@ -151,7 +151,7 @@ token Lexer::integer(const std::string &str, size_t &i, unsigned r) {
         }
 
     std::string value = str.substr(i, j - i);
-    int index = storage->setIdentifer(value);
+    int index = storage->addIdentifer(value);
     i = j;
     return getResult(INTEGER, index);
 }
@@ -168,7 +168,7 @@ token Lexer::string(const std::string &str, size_t &i, unsigned r) {
 
     else {
         std::string value = str.substr(i, j - i + 1);
-        int index = storage->setIdentifer(value);
+        int index = storage->addIdentifer(value);
         i = j + 1;
         return getResult(STRING, index);
     }
