@@ -4,6 +4,14 @@
 #include <algorithm>
 #include <vector>
 
+// 调试输出
+#ifdef DEBUG
+#define debug(...) std::cerr << to_string(__VA_ARGS__) << '\n'
+#else
+#define debug(...) 42
+#endif
+
+
 template <typename T>
 class Vector : public std::vector<T> {
 public:

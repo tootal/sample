@@ -1,76 +1,64 @@
 #pragma once
 #include "Util.h"
 
-// 标识符
-#define IDENTIFIER "<identifier>"
-// 整数
-#define INTEGER "<integer>"
-// 字符串
-#define STRING "<string>"
-// 未定义字符
 #define UNDEFINED "<undefined>"
-#define MAX_RESERVE_WORD_LEN 9
-#define MIN_RESERVE_WORD_LEN 2
-#define FIRST_RESERVE_WORD 1
-#define LAST_RESERVE_WORD 35
+#define IDENTIFIER "<identifier>"
+#define INTEGER "<integer>"
+#define STRING "<string>"
+#define RESERVED_WORD "<reserved_word>"
+#define SINGLE_DELIMITER "<single_delimiter>"
+#define DOUBLE_DELIMITER "<double_delimiter>"
+#define BOOLEAN_CONSTANT "<boolean_constant>"
+#define RELATION_WORD "<relation_word>"
 
-// 关系运算符
-#define RELATIONWORD "<relation_word>"
-// 布尔常数
-#define BOOLEANCONSTANT "<boolean_constant>"
+#define type_SET "integer", "bool", "char"
+#define booleanConstant_SET "true", "false"
+#define reservedWord_SET                                                      \
+    "and", "array", "begin", "bool", "call", "case", "char", "constant",      \
+        "dim", "do", "else", "end", "false", "for", "if", "input", "integer", \
+        "not", "of", "or", "output", "procedure", "program", "read", "real",  \
+        "repeat", "set", "stop", "then", "to", "true", "until", "var",        \
+        "while", "write"
+#define singleDelimiter_SET \
+    '<', '>', ':', '/', '*', '.', '+', '-', '=', '(', ')', '[', ']', ';', ','
+#define doubleDelimiter_SET "*/", "..", "/*", ":=", "<=", "<>", ">="
+#define relationWord_SET "<", "<=", "<>", "=", ">", ">="
+#define encodeTable_SET                                                    \
+    UNDEFINED, reservedWord_SET, IDENTIFIER, INTEGER, STRING, "(", ")", "*", \
+        "*/", "+", ",", "-", ".", "..", "/", "/*", ":", ":=", ";",         \
+        relationWord_SET, "[", "]"
 
+// 定义static函数访问字符集
+#define SET_DEFINE(method)                 \
+    static StringList& method() {          \
+        static StringList t{method##_SET}; \
+        return t;                          \
+    }
 class Data {
 public:
     using CharList = const Vector<char>;
     using StringList = const Vector<std::string>;
     static CharList& singleDelimiter() {
-        static CharList single_delimiter{'<', '>', ':', '/', '*', '.', '+', '-',
-                                         '=', '(', ')', '[', ']', ';', ','};
-        return single_delimiter;
+        static CharList t{singleDelimiter_SET};
+        return t;
     }
-    static StringList& doubleDelimiter() {
-        static StringList double_delimiter{
-            "*/", "..", "/*", ":=", "<=", "<>", ">="};
-        return double_delimiter;
-    }
-    static StringList& relationWord() {
-        static StringList relation_word{"<", "<>", "<=", ">=", ">", "="};
-        return relation_word;
-    }
-    static StringList& booleanConstant() {
-        static StringList boolean_constant{"true", "false"};
-        return boolean_constant;
-    }
-    static StringList& codingSchedule() {
-        static StringList coding_schedule{
-            UNDEFINED,  "and",   "array",    "begin",  "bool",      "call",
-            "case",     "char",  "constant", "dim",    "do",        "else",
-            "end",      "false", "for",      "if",     "input",     "integer",
-            "not",      "of",    "or",       "output", "procedure", "program",
-            "read",     "real",  "repeat",   "set",    "stop",      "then",
-            "to",       "true",  "until",    "var",    "while",     "write",
-            IDENTIFIER, INTEGER, STRING,     "(",      ")",         "*",
-            "*/",       "+",     ",",        "-",      ".",         "..",
-            "/",        "/*",    ":",        ":=",     ";",         "<",
-            "<=",       "<>",    "=",        ">",      ">=",        "[",
-            "]"};
-        return coding_schedule;
-    }
-    static StringList& type() {
-        static StringList types{"integer", "bool", "char"};
-        return types;
-    }
+    SET_DEFINE(doubleDelimiter);
+    SET_DEFINE(reservedWord);
+    SET_DEFINE(relationWord);
+    SET_DEFINE(booleanConstant);
+    SET_DEFINE(encodeTable);
+    SET_DEFINE(type);
     static unsigned getCode(const std::string& word) {
-        auto pos = codingSchedule().find(word);
-        if (pos != codingSchedule().cend())
-            return pos - codingSchedule().cbegin();
+        auto pos = encodeTable().find(word);
+        if (pos != encodeTable().cend())
+            return pos - encodeTable().cbegin();
         else
             return 0;
     }
     static std::string getValue(unsigned code) {
-        if (code >= codingSchedule().size())
+        if (code >= encodeTable().size())
             return UNDEFINED;
         else
-            return codingSchedule()[code];
+            return encodeTable()[code];
     }
 };

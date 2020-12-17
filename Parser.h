@@ -6,12 +6,6 @@
 #define EMPTY -1
 #define EMPTY_CHAIN 0
 
-#ifdef DEBUG
-#define debug(...) std::cerr << to_string(__VA_ARGS__) << '\n'
-#else
-#define debug(...) 42
-#endif
-
 // 四元式 id = l op r
 struct Quaternary {
     const std::string op;
@@ -241,7 +235,7 @@ class Parser {
     void assignmentStatement() {
 		debug("assignmentStatement()");
 		expect(IDENTIFIER, ":=");
-        unsigned mark = i-1;
+        unsigned mark = i-1; // tokens[mark] == ":="
         int id = EMPTY;
         arithmeticExpression(id);
         if (storage[tokens[mark - 1].val_index].type != storage[id].type)
@@ -424,7 +418,7 @@ class Parser {
     void booleanVariable(unsigned &tl, unsigned &fl) {
 		debug("booleanVariable()");
         // <boolean_constant>
-        if (tryExpect(BOOLEANCONSTANT)) {
+        if (tryExpect(BOOLEAN_CONSTANT)) {
             tl = intermediateCode.size();
             gen("jnz", tokens[i - 1].type_index, EMPTY, EMPTY);
             fl = intermediateCode.size();
@@ -432,7 +426,7 @@ class Parser {
             return;
         }
         // <identifier> <relation_word> <identifier>
-        if (tryExpect(IDENTIFIER, RELATIONWORD, IDENTIFIER)) {
+        if (tryExpect(IDENTIFIER, RELATION_WORD, IDENTIFIER)) {
             (i -= 3), expectVar("integer");
             (i += 1), expectVar("integer");
             tl = intermediateCode.size();
@@ -456,7 +450,7 @@ class Parser {
 			debug("arithmeticHelper()");
             arithmeticExpression(id1);
             mark = i;
-            expect(RELATIONWORD);
+            expect(RELATION_WORD);
             arithmeticExpression(id2);
         };
         if (tryProcedure(arithmeticHelper)) {
@@ -503,7 +497,7 @@ public:
             if (q.l == EMPTY)
                 out << "-, ";
             else if (q.op == "jnz") {
-                if (tokens[q.l] == BOOLEANCONSTANT)
+                if (tokens[q.l] == BOOLEAN_CONSTANT)
                     out << Data::getValue(q.l) << " , ";
                 else
                     out << storage[q.l].name << ", ";

@@ -18,9 +18,9 @@ struct Token {
     // 比较运算符
     bool operator==(const String &str) const {
         // 符号集合判断
-        if (str == RELATIONWORD) {
+        if (str == RELATION_WORD) {
             return Data::relationWord().contains(Data::getValue(type_index));
-        } else if (str == BOOLEANCONSTANT) {
+        } else if (str == BOOLEAN_CONSTANT) {
             return Data::booleanConstant().contains(Data::getValue(type_index));
         } else {
             return type_index == Data::getCode(str);
@@ -30,9 +30,9 @@ struct Token {
         return !(type_index == Data::getCode(str));
     }
     // 格式化输出
-	friend String to_string(const Token &w) {
-		return to_string("(", w.type_index, ", ", w.val_index, " )");
-	}
+    friend String to_string(const Token &w) {
+        return to_string("(", w.type_index, ", ", w.val_index, " )");
+    }
     friend std::ostream &operator<<(std::ostream &out, const Token &w) {
         out << "(";
         out.width(2);
@@ -51,7 +51,7 @@ struct Token {
 class Lexer {
     // 符号表引用
     Storage &storage;
-
+    // 获取字符串的编码，返回Token
     Token getResult(const std::string &str, int index = VALUE_NONE) {
         if (str == UNDEFINED || str == "/*") {
             return {Data::getCode(str), VALUE_NONE};
@@ -61,31 +61,17 @@ class Lexer {
             return {Data::getCode(str), VALUE_WORD};
         }
     }
-
     bool isString(char c) { return c == '\''; }
     bool isSingleDelimiter(char c) {
-        for (auto x : Data::singleDelimiter())
-            if (c == x) return true;
-        return false;
+        return Data::singleDelimiter().contains(c);
     }
-
-    bool isDoubleCharDelimiter(const std::string &str) {
-        for (auto &s : Data::doubleDelimiter())
-            if (str == s) return true;
-        return false;
+    bool isDoubleCharDelimiter(const String &str) {
+        return Data::doubleDelimiter().contains(str);
     }
     bool isAnotationBegin(const std::string &str) { return str == "/*"; }
     bool isAnotationEnd(const std::string &str) { return str == "*/"; }
     bool isReserveWord(const std::string &str) {
-        if (str.length() > MAX_RESERVE_WORD_LEN ||
-            str.length() < MIN_RESERVE_WORD_LEN)
-            return false;
-
-        if (Data::getCode(str) >= FIRST_RESERVE_WORD &&
-            Data::getCode(str) <= LAST_RESERVE_WORD)
-            return true;
-
-        return false;
+        return Data::reservedWord().contains(str);
     }
 
     Token identifier(const std::string &str, size_t &i) {
