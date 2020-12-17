@@ -1,5 +1,6 @@
 program example4;
-var  A : bool;
+var  A,B,C,D:integer;
 begin
-  A := true;
+  while A<C and B>D do
+    A:= B
 end.
