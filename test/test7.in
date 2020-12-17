@@ -1,8 +1,7 @@
-program example4;
-var  A,B,C,D:integer;
+program example5;
+var a, b, max : integer;
+    c : bool;
 begin
-  A:=7; B:=5; C:=3; D:=4;
-  while A<C and B>D do
-    if A=1 then C:=C+1 else
-      while A<=D do A:=A*2
+    if false then max := a
+    else max := b
 end.

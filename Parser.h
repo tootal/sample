@@ -33,7 +33,8 @@ class Parser {
     // 当前正在处理的Token下标
     size_t i = 0;
     // 生成四元式id = l op r
-    size_t gen(const std::string &op, int l, int r, int id) {
+    size_t gen(const std::string &op, int l = EMPTY, int r = EMPTY,
+               int id = EMPTY) {
         inCode.emplace_back(op, l, r, id);
         debug("gen", qustr(inCode.back()));
         return inCode.size() - 1;
@@ -405,14 +406,26 @@ class Parser {
         debug("booleanVariable()");
         auto gen_code = [this](const String &op, int l, int r) -> Pair {
             auto tl = inCode.size();
-            gen(op, l, r, EMPTY);
+            gen(op, l, r);
             auto fl = inCode.size();
-            gen("j", EMPTY, EMPTY, EMPTY);
+            gen("j");
             return {tl, fl};
         };
         // <boolean_constant>
         if (tryExpect(BOOLEAN_CONSTANT)) {
-            return gen_code("j", EMPTY, EMPTY);
+            if (tokens[i - 1] == "true") {
+                auto tl = inCode.size();
+                gen("j");
+                auto fl = inCode.size();
+                gen("nop");
+                return {tl, fl};
+            } else {
+                auto tl = inCode.size();
+                gen("nop");
+                auto fl = inCode.size();
+                gen("j");
+                return {tl, fl};
+            }
         }
         // <identifier> <relation_word> <identifier>
         if (tryExpect(IDENTIFIER, RELATION_WORD, IDENTIFIER)) {
@@ -476,6 +489,7 @@ public:
         debug("parse done.");
     }
     String qustr(const Quaternary &q) {
+        if (q.op == "nop") return "(nop , - , - , - )";
         auto s = to_string("(", q.op, " , ");
         if (q.l == EMPTY)
             s += "- , ";
