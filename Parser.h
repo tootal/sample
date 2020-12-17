@@ -149,7 +149,7 @@ class Parser {
         auto type_id = tokens[i].type_id;
         auto type_name = Data::getValue(type_id);
         if (!Data::type().contains(type_name)) error("缺少类型");
-        std::cerr << "type()=" << type_name << "\n";
+        debug("type() = ", type_name);
         return ++i, type_id;
     }
 
