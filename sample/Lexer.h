@@ -30,6 +30,9 @@ struct Token {
         return !(type_index == Data::getCode(str));
     }
     // 格式化输出
+	friend String to_string(const Token &w) {
+		return to_string("(", w.type_index, ", ", w.val_index, " )");
+	}
     friend std::ostream &operator<<(std::ostream &out, const Token &w) {
         out << "(";
         out.width(2);

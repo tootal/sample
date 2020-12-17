@@ -6,6 +6,8 @@
 #define EMPTY -1
 #define EMPTY_CHAIN 0
 
+#define debug(...) std::cerr << to_string(__VA_ARGS__) << '\n';
+
 // 四元式 id = l op r
 struct Quaternary {
     const std::string op;
@@ -14,9 +16,11 @@ struct Quaternary {
     Quaternary(const std::string &op_, int l_, int r_, int id_)
         : op(op_), l(l_), r(r_), id(id_) {}
     // 格式化输出
+	friend String to_string(const Quaternary &q) {
+		return to_string("(", q.op, ", ", q.l, ", ", q.r, ", ", q.id, ")");
+	}
     friend std::ostream &operator<<(std::ostream &out, const Quaternary &q) {
-        out << "(" << q.op << ", " << q.l << ", " << q.r << ", " << q.id << ")";
-        return out;
+		return (out << to_string(q));
     }
 };
 
@@ -41,7 +45,7 @@ class Parser {
     // 生成四元式id = l op r
     size_t gen(const std::string &op, int l, int r, int id) {
         intermediateCode.emplace_back(op, l, r, id);
-        std::cerr << "gen" << intermediateCode.back() << '\n';
+		debug("gen", intermediateCode.back());
         return intermediateCode.size() - 1;
     }
     // 生成错误信息，抛出异常
@@ -101,7 +105,7 @@ class Parser {
     }
     // 判断是否为文件末尾
     void expectEOF() const {
-        if (i != tokens.size() - 1) error("文件末尾异常。");
+        if (i != tokens.size()) error("文件末尾异常。");
     }
     // 判断变量是否声明
     void expectDeclaredVar() const {
@@ -140,13 +144,14 @@ class Parser {
         }
     }
     // <type> → integer│bool│char
-    // 成功返回type_id, 失败返回0
+    // 成功返回type_id, 失败error
     unsigned type() {
         auto type_id = tokens[i].type_index;
-        if (Data::type().contains(Data::getValue(type_id)))
-            return ++i, type_id;
-        else
-            return 0;
+		auto type_name = Data::getValue(type_id);
+		if (!Data::type().contains(type_name))
+			error("expect type");
+		std::cerr << "type()=" << type_name << "\n";
+		return ++i, type_id;
     }
     // 递归下降的语法分析
 
@@ -158,7 +163,7 @@ class Parser {
     // <program> → program <identifier>;
     // <variable_declaration> <compound_statement>.
     void program() {
-        std::cerr << "program()\n";
+		debug("program()");
         expect("program", IDENTIFIER, ";");
         gen("program", tokens[i - 2].val_index, EMPTY, EMPTY);
         variableDeclaration();
@@ -175,10 +180,12 @@ class Parser {
     // <variable_define> → <identifier_list>:<type>;
     // <variable_define>│<identifier_list>:<type>;
     void variableDefine() {
+		debug("variableDefine()");
         auto idList = identifierList();
         if (idList.empty()) error("缺少变量定义！");
         variableDefineHelper(idList);
-        while (true) {
+        while (tryExpect(IDENTIFIER)) {
+			i--;
             auto idList = identifierList();
             if (idList.empty()) break;
             variableDefineHelper(idList);
@@ -195,9 +202,11 @@ class Parser {
                 storage[i].type = t;
             }
         }
+		expect(";");
     }
     // <identifier_list> → <identifier> , <identifier_list>│<identifier>
     Vector<size_t> identifierList() {
+		debug("identifierList()");
         Vector<size_t> idList;
         expect(IDENTIFIER);
         idList.push_back(tokens[i - 1].val_index);
@@ -211,6 +220,7 @@ class Parser {
     // <statement> →
     // <assignment_statement>│<if_statement>│<while_statement>│<repeat_statement>│<compound_statement>
     void statement(unsigned &chain) {
+		debug("statement()");
         if (tryExpect(IDENTIFIER))
             i--, assignmentStatement();
         else if (tryExpect("if"))
@@ -225,7 +235,8 @@ class Parser {
             error("非法语句！");
     }
     void assignmentStatement() {
-        expect(":=");
+		debug("assignmentStatement()");
+		expect(IDENTIFIER, ":=");
         unsigned mark = i-1;
         int id = EMPTY;
         arithmeticExpression(id);
@@ -237,6 +248,8 @@ class Parser {
     // <if_statement>→ if <boolean_expression> then <statement>
     // │ if <boolean_expression> then <statement> else <statement>
     void ifStatement(unsigned &chain) {
+		debug("ifStatement()");
+		expect("if");
         unsigned tl, fl, then_chain = EMPTY_CHAIN, else_chain = EMPTY_CHAIN;
         booleanExpression(tl, fl);
         expect("then");
@@ -255,6 +268,8 @@ class Parser {
     }
     // <while_statement> → while <boolean_expression> do <statement>
     void whileStatement(unsigned &chain) {
+		debug("whileStatement()");
+		expect("while");
         unsigned tl, fl, tmp_chain = EMPTY_CHAIN,
                          mark = intermediateCode.size();
         booleanExpression(tl, fl);
@@ -267,6 +282,7 @@ class Parser {
     }
     // <repeat_statement> → repeat <statement> until <boolean_expression>
     void repeatStatement(unsigned &chain) {
+		expect("repeat");
         unsigned tl, fl;
         unsigned mark = intermediateCode.size();
         statement(chain);
@@ -277,12 +293,14 @@ class Parser {
     }
     // <compound_statement> → begin <statement_list> end
     void compoundStatement() {
+		debug("compoundStatement()");
         expect("begin");
         statementList();
         expect("end");
     }
     // <statement_list> → <statement> ;<statement_list>│<statement>
     void statementList() {
+		debug("statementList()");
         unsigned chain = EMPTY_CHAIN;
         statementListHelper(chain);
         while (tryExpect(";")) statementListHelper(chain);
@@ -360,6 +378,7 @@ class Parser {
     // <boolean_expression> → <boolean_expression> or
     // <boolean_item>│<boolean_item>
     void booleanExpression(unsigned &tl, unsigned &fl) {
+		debug("booleanExpression()");
         unsigned tl_1, fl_1, tl_2, fl_2;
         booleanItem(tl_1, fl_1);
         if (tryExpect("or")) {
@@ -374,6 +393,7 @@ class Parser {
     }
     // <boolean_item> → <boolean_item> and <boolean_factor>│<boolean_factor>
     void booleanItem(unsigned &tl, unsigned &fl) {
+		debug("booleanItem()");
         unsigned tl_1, fl_1, tl_2, fl_2;
         booleanFactor(tl_1, fl_1);
         if (tryExpect("and")) {
@@ -388,6 +408,7 @@ class Parser {
     }
     // <boolean_factor> → <boolean_variable>│not <boolean_factor>
     void booleanFactor(unsigned &tl, unsigned &fl) {
+		debug("booleanFactor()");
         if (tryExpect("not"))
             return booleanFactor(fl, tl);
         else
@@ -399,6 +420,8 @@ class Parser {
     // │ <identifier> <relation_word> <identifier>
     // │ <arithmetic_expression> <relation_word> <arithmetic_expression>
     void booleanVariable(unsigned &tl, unsigned &fl) {
+		debug("booleanVariable()");
+        if (tryExpect("not"))
         // <boolean_constant>
         if (tryExpect(BOOLEANCONSTANT)) {
             tl = intermediateCode.size();
@@ -416,6 +439,7 @@ class Parser {
                 tokens[i - 2].val_index, tokens[i].val_index, EMPTY);
             fl = intermediateCode.size();
             gen("j", EMPTY, EMPTY, EMPTY);
+			i++;
             return;
         }
         // ( <boolean_expression> )
@@ -462,6 +486,8 @@ public:
             rowMark.push_back(tokens.size());
             ++row;
         }
+		debug("Tokens:");
+		for (auto tk : tokens) debug(tk);
         program();
     }
     void printIntermediateCode(std::ostream &out) {
