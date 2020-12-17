@@ -210,27 +210,27 @@ class Parser {
     }
     // <statement> →
     // <assignment_statement>│<if_statement>│<while_statement>│<repeat_statement>│<compound_statement>
-    int statement() {
+    void statement(int &chain) {
         debug("statement()");
         if (tryExpect(IDENTIFIER))
-            return i--, assignmentStatement(), EMPTY_CHAIN;
+            i--, assignmentStatement();
         else if (tryExpect("if"))
-            return i--, ifStatement();
+            i--, ifStatement(chain);
         else if (tryExpect("while"))
-            return i--, whileStatement();
+            i--, whileStatement(chain);
         else if (tryExpect("repeat"))
-            return i--, repeatStatement();
+            i--, repeatStatement(chain);
         else if (tryExpect("begin"))
-            return i--, compoundStatement();
+            i--, compoundStatement();
         else
-            return error("非法语句！"), EMPTY_CHAIN;
+            error("非法语句！");
     }
     void assignmentStatement() {
         debug("assignmentStatement()");
         expect(IDENTIFIER, ":=");
         (i -= 2), expectDeclaredVar(), (i++);
-        unsigned mark = i - 1;  // tokens[mark] == ":="
-        int id = arithmeticExpression();
+        auto mark = i - 1;  // tokens[mark] == ":="
+        auto id = arithmeticExpression();
         if (storage[tokens[mark - 1].name_id].type != storage[id].type)
             error("赋值语句左右类型不一致。");
         else
@@ -238,72 +238,71 @@ class Parser {
     }
     // <if_statement>→ if <boolean_expression> then <statement>
     // │ if <boolean_expression> then <statement> else <statement>
-    int ifStatement() {
+    void ifStatement(int &chain) {
         debug("ifStatement()");
         expect("if");
         auto [tl, fl] = booleanExpression();
         debug("booleanExpression() -> (", tl, ", ", fl, ")");
         expect("then");
         backpatch(tl, inCode.size());
-        auto then_chain = statement();
+        int then_chain = EMPTY_CHAIN, else_chain = EMPTY_CHAIN;
+        statement(then_chain);
         debug("then_chain -> ", then_chain);
         if (tryExpect("else")) {
             auto mark = inCode.size();
             gen("j", EMPTY, EMPTY, EMPTY);
             backpatch(fl, inCode.size());
             auto tmp_chain = merge(mark, then_chain);
-            auto else_chain = statement();
+            statement(else_chain);
             debug("else_chain -> ", else_chain);
-            return merge(tmp_chain, else_chain);
+            chain = merge(tmp_chain, else_chain);
         } else {
-            return merge(fl, then_chain);
+            chain = merge(fl, then_chain);
         }
     }
     // <while_statement> → while <boolean_expression> do <statement>
-    int whileStatement() {
+    void whileStatement(int &chain) {
         debug("whileStatement()");
         expect("while");
         auto mark = inCode.size();
         auto [tl, fl] = booleanExpression();
         expect("do");
         backpatch(tl, inCode.size());
-        auto tmp_chain = statement();
+        int tmp_chain = EMPTY_CHAIN;
+        statement(tmp_chain);
         backpatch(tmp_chain, mark);
         gen("j", EMPTY, EMPTY, mark);
-        return fl;
+        chain = fl;
     }
     // <repeat_statement> → repeat <statement> until <boolean_expression>
-    int repeatStatement() {
+    void repeatStatement(int &chain) {
         expect("repeat");
         unsigned mark = inCode.size();
-        auto chain = statement();
+        statement(chain);
         expect("until");
         auto [tl, fl] = booleanExpression();
         chain = tl;
         backpatch(fl, mark);
-        return chain;
     }
     // <compound_statement> → begin <statement_list> end
-    int compoundStatement() {
+    void compoundStatement() {
         debug("compoundStatement()");
         expect("begin");
-        auto chain = statementList();
+        statementList();
         expect("end");
-        return chain;
     }
     // <statement_list> → <statement> ;<statement_list>│<statement>
-    int statementList() {
+    void statementList() {
         debug("statementList()");
-        auto chain = statementListHelper();
-        while (tryExpect(";")) chain = statementListHelper();
-        return chain;
+        statementListHelper();
+        while (tryExpect(";")) statementListHelper();
     }
-    int statementListHelper() {
+    void statementListHelper() {
         debug("statementListHelper()");
-        auto chain = statement();
+        int chain = EMPTY_CHAIN;
+        statement(chain);
         debug("statementListHelper() chain -> ", chain);
         if (chain != EMPTY_CHAIN) backpatch(chain, inCode.size());
-        return chain;
     }
     // <arithmetic_expression> → <arithmetic_expression> + <arithmetic_item>
     // │<arithmetic_expression> - <arithmetic_item>
