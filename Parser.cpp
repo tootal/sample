@@ -24,7 +24,7 @@ unsigned Parser::gen(const std::string &ope,
 
 
 void Parser::backpatch(unsigned p, unsigned t) {
-
+	std::cerr << "backpatch(" << p << ", " << t << ")\n";
 	for (int i = p; i != EMPTY;) {
 		int tmp = IntermediateCode[i].ide;
 		IntermediateCode[i].ide = t;
