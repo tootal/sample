@@ -48,14 +48,14 @@ public:
     SET_DEFINE(booleanConstant);
     SET_DEFINE(encodeTable);
     SET_DEFINE(type);
-    static int getCode(const std::string& word) {
+    static int getCode(const String& word) {
         auto pos = encodeTable().find(word);
         if (pos != encodeTable().cend())
             return pos - encodeTable().cbegin();
         else
             return 0;
     }
-    static std::string getValue(int code) {
+    static String getValue(int code) {
         if (code >= encodeTable().size())
             return UNDEFINED;
         else

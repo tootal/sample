@@ -8,10 +8,10 @@
 
 // 四元式 id = l op r
 struct Quaternary {
-    const std::string op;
+    const String op;
     // 保存符号表中的下标
     int l, r, id;
-    Quaternary(const std::string &op_, int l_, int r_, int id_)
+    Quaternary(const String &op_, int l_, int r_, int id_)
         : op(op_), l(l_), r(r_), id(id_) {}
     // 格式化输出
     friend String to_string(const Quaternary &q) {
@@ -412,21 +412,8 @@ class Parser {
             return {tl, fl};
         };
         // <boolean_constant>
-        if (tryExpect(BOOLEAN_CONSTANT)) {
-            if (tokens[i - 1] == "true") {
-                auto tl = inCode.size();
-                gen("j");
-                auto fl = inCode.size();
-                gen("nop");
-                return {tl, fl};
-            } else {
-                auto tl = inCode.size();
-                gen("nop");
-                auto fl = inCode.size();
-                gen("j");
-                return {tl, fl};
-            }
-        }
+        if (tryExpect(BOOLEAN_CONSTANT))
+            return gen_code("jnz", tokens[i - 1].type_id, EMPTY);
         // <identifier> <relation_word> <identifier>
         if (tryExpect(IDENTIFIER, RELATION_WORD, IDENTIFIER)) {
             (i -= 3), expectVar("integer");
@@ -489,12 +476,12 @@ public:
         debug("parse done.");
     }
     String qustr(const Quaternary &q) {
-        if (q.op == "nop") return "(nop , - , - , - )";
+        if (q.op == "program") return to_string("(program , ", storage[q.l].name, " , - , - )");
         auto s = to_string("(", q.op, " , ");
         if (q.l == EMPTY)
             s += "- , ";
-        else if (q.op == "jnz") {
-            if (tokens[q.l] == BOOLEAN_CONSTANT)
+        else if (q.op == String("jnz")) {
+            if (Data::booleanConstant().contains(Data::getValue(q.l)))
                 s += to_string(Data::getValue(q.l), " , ");
             else
                 s += to_string(storage[q.l].name, " , ");
@@ -511,6 +498,7 @@ public:
         else
             s += to_string(storage[q.id].name);
         s += ")";
+        debug("qustr(", q, ") -> ", s);
         return s;
     }
     void printCode(std::ostream &out) {
