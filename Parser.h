@@ -134,11 +134,10 @@ class Parser {
         if (p2 == EMPTY_CHAIN)
             ret = p1;
         else {
-            for (int i = p2; inCode[i].id != EMPTY;) {
-                i = inCode[i].id;
-                inCode[i].id = p1;
-                debug(qustr(inCode[i]));
-            }
+            int i;
+            for (int i = p2; inCode[i].id != EMPTY;) i = inCode[i].id;
+            inCode[i].id = p1;
+            debug(qustr(inCode[i]));
             ret = p2;
         }
         debug("merge(", p1, ", ", p2, ") -> ", ret);
@@ -475,7 +474,8 @@ public:
         debug("parse done.");
     }
     String qustr(const Quaternary &q) {
-        if (q.op == "program") return to_string("(program , ", storage[q.l].name, " , - , - )");
+        if (q.op == "program")
+            return to_string("(program , ", storage[q.l].name, " , - , - )");
         auto s = to_string("(", q.op, " , ");
         if (q.l == EMPTY)
             s += "- , ";
