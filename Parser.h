@@ -187,14 +187,10 @@ class Parser {
     void variableDefineHelper(const Vector<size_t> idList) {
         expect(":");
         auto t = type();
-        if (t == 0)
-            error("未定义变量类型！");
-        else {
-            debug("define ", Data::getValue(t), " ", idList);
-            for (auto i : idList) {
-                storage[i].declared = true;
-                storage[i].type = t;
-            }
+        debug("define ", Data::getValue(t), " ", idList);
+        for (auto i : idList) {
+            storage[i].declared = true;
+            storage[i].type = t;
         }
         expect(";");
     }
@@ -452,7 +448,7 @@ class Parser {
             }
         }
         // <identifier>
-        expectVar("boolean");
+        expectVar("bool");
         return gen_code("jnz", tokens[i - 1].name_id, EMPTY);
     }
 

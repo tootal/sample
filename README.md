@@ -69,9 +69,9 @@
 | constant | 8   | stop               | 28  | /    | 48  |
 | dim      | 9   | then               | 29  | `/*` | 49  |
 | do       | 10  | to                 | 30  | :    | 50  |
-| else     | 11  | TRUE               | 31  | :=   | 51  |
+| else     | 11  | true               | 31  | :=   | 51  |
 | end      | 12  | until              | 32  | ;    | 52  |
-| FALSE    | 13  | var                | 33  | `<`  | 53  |
+| false    | 13  | var                | 33  | `<`  | 53  |
 | for      | 14  | while              | 34  | `<=` | 54  |
 | if       | 15  | write              | 35  | `<>` | 55  |
 | input    | 16  | identifier         | 36  | =    | 56  |

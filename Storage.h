@@ -9,10 +9,10 @@ struct Identifer {
     // 标识符名
     String name = "";
     // 标识符类型
-    unsigned type = 0;
+    int type = 0;
     // 是否声明
     bool declared = false;
-    Identifer(const String &name_, unsigned type_, bool declared_)
+    Identifer(const String &name_, int type_, bool declared_)
         : name(name_), type(type_), declared(declared_) {}
     // 临时标识符(从1开始编号)
     static Identifer tempIdentifer() {

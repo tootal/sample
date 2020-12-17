@@ -28,8 +28,8 @@ int main(int argc, char *argv[]) {
         Storage storage;
         Lexer scanner(storage);
         std::cout << "词法分析结果: \n";
-        unsigned count = 0;
-        unsigned row = 0;
+        int count = 0;
+        int row = 0;
         std::string str;
         while (std::getline(in, str)) {
             for (size_t i = 0; i < str.length();) {

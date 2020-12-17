@@ -1,6 +1,7 @@
 program example5;
 var a, b, max : integer;
+    c : bool;
 begin
-    if a >= b then max := a
+    if c then max := a
     else max := b
 end.

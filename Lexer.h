@@ -12,7 +12,7 @@
 
 // 词法单元
 struct Token {
-    unsigned type_id;
+    int type_id;
     // 保存符号表中的下标
     int name_id;
     // 比较运算符
@@ -81,7 +81,7 @@ class Lexer {
             return getResult(IDENTIFIER, index);
         }
     }
-    Token delimiter(const String &str, size_t &i, unsigned r) {
+    Token delimiter(const String &str, size_t &i, int r) {
         if (str.length() > i + 1) {
             String substr = str.substr(i, 2);
             if (isDoubleCharDelimiter(substr)) {
@@ -103,7 +103,7 @@ class Lexer {
         }
         return getResult(str.substr(i++, 1));
     }
-    Token integer(const std::string &str, size_t &i, unsigned r) {
+    Token integer(const std::string &str, size_t &i, int r) {
         size_t j = i + 1;
         for (; j < str.length(); ++j)
             if (!isdigit(str[j])) {
@@ -118,7 +118,7 @@ class Lexer {
         i = j;
         return getResult(INTEGER, index);
     }
-    Token string(const std::string &str, size_t &i, unsigned r) {
+    Token string(const std::string &str, size_t &i, int r) {
         size_t j = i + 1;
         for (; j < str.length(); ++j) {
             if (isString(str[j])) break;
@@ -136,7 +136,7 @@ class Lexer {
 
 public:
     Lexer(Storage &storage) : storage(storage) {}
-    Token scan(const std::string &str, size_t &i, unsigned r) {
+    Token scan(const std::string &str, size_t &i, int r) {
         auto len = str.length();
         for (; i < len; ++i) {
             if (isspace(str[i]))
