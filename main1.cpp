@@ -35,11 +35,11 @@ int main(int argc, char *argv[]) {
             for (size_t i = 0; i < str.length();) {
                 try {
                     Token result = scanner.scan(str, i, row);
-                    if (result.val_index != VALUE_NONE) {
+                    if (result.name_id != VALUE_NONE) {
                         ++count;
                         std::cout << result;
                         if (count % 5 == 0) std::cout << '\n';
-                        else std::cout << "\t";
+                        else std::cout << " ";
                     }
                 } catch (std::string &msg) {
                     std::cerr << msg << '\n';

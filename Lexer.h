@@ -31,8 +31,7 @@ struct Token {
     }
     // 格式化输出
     friend String to_string(const Token &w) {
-        String val =
-            w.name_id == VALUE_WORD ? "-" : to_string(w.name_id);
+        String val = w.name_id == VALUE_WORD ? "-" : to_string(w.name_id + 1);
         return to_string("(", w.type_id, ", ", val, " )");
     }
     STRING_OUT(Token);
@@ -42,7 +41,7 @@ struct Token {
 class Lexer {
     // 符号表引用
     Storage &storage;
-    
+
     // 获取字符串的编码，返回Token
     Token getResult(const std::string &str, int index = VALUE_NONE) {
         if (str == UNDEFINED || str == "/*") {
@@ -94,7 +93,8 @@ class Lexer {
                         }
                     throw to_string("第", r, "行第", i, "列: 注释界符缺失。");
                 } else if (isAnotationEnd(substr))
-                    throw to_string("第", r, "行第", i, "列: 不应出现字符 ", str[i]);
+                    throw to_string("第", r, "行第", i, "列: 不应出现字符 ",
+                                    str[i]);
                 else {
                     i += 2;
                     return getResult(substr);
@@ -110,7 +110,8 @@ class Lexer {
                 if (isSingleDelimiter(str[j]) || isspace(str[j]))
                     break;
                 else
-                    throw to_string("第", r, "行第", j, "列: 不应出现字符 ", str[j]);
+                    throw to_string("第", r, "行第", j, "列: 不应出现字符 ",
+                                    str[j]);
             }
 
         std::string value = str.substr(i, j - i);
@@ -150,7 +151,8 @@ public:
             else if (isSingleDelimiter(str[i]))
                 return delimiter(str, i, r);
             else
-                throw to_string("第", r, "行第", i, "列: 不应出现字符 ", str[i]);
+                throw to_string("第", r, "行第", i, "列: 不应出现字符 ",
+                                str[i]);
         }
         return getResult(UNDEFINED);
     }
