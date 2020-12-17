@@ -11,6 +11,11 @@
 #define debug(...) 42
 #endif
 
+// 字符串输出宏（需要定义to_string）
+#define STRING_OUT(Class)                                                \
+    friend std::ostream &operator<<(std::ostream &out, const Class &x) { \
+        return (out << to_string(x));                                    \
+    }
 
 template <typename T>
 class Vector : public std::vector<T> {

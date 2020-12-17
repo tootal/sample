@@ -7,19 +7,24 @@
 // 标识符
 struct Identifer {
     // 标识符名
-    std::string name = "";
+    String name = "";
     // 标识符类型
     unsigned type = 0;
     // 是否声明
     bool declared = false;
-    Identifer(const std::string &name_, unsigned type_, bool declared_)
+    Identifer(const String &name_, unsigned type_, bool declared_)
         : name(name_), type(type_), declared(declared_) {}
     // 临时标识符(从1开始编号)
     static Identifer tempIdentifer() {
         static int count = 0;
         count++;
-        return {"T" + std::to_string(count), 0, true};
+        return {to_string("T", count), 0, true};
     }
+    // 格式化输出
+    friend String to_string(const Identifer &w) {
+        return to_string("(name=", w.name, ", type=", w.type, ", declared=", w.declared, ")");
+    }
+    STRING_OUT(Identifer);
 };
 
 // 符号表
@@ -46,5 +51,6 @@ public:
         }
         return i;
     }
+    auto size() { return identifers.size(); }
     void clear() { identifers.clear(); }
 };

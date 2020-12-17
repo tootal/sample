@@ -12,45 +12,37 @@
 
 // 词法单元
 struct Token {
-    unsigned type_index;
+    unsigned type_id;
     // 保存符号表中的下标
-    int val_index;
+    int name_id;
     // 比较运算符
     bool operator==(const String &str) const {
         // 符号集合判断
         if (str == RELATION_WORD) {
-            return Data::relationWord().contains(Data::getValue(type_index));
+            return Data::relationWord().contains(Data::getValue(type_id));
         } else if (str == BOOLEAN_CONSTANT) {
-            return Data::booleanConstant().contains(Data::getValue(type_index));
+            return Data::booleanConstant().contains(Data::getValue(type_id));
         } else {
-            return type_index == Data::getCode(str);
+            return type_id == Data::getCode(str);
         }
     }
     bool operator!=(const String &str) const {
-        return !(type_index == Data::getCode(str));
+        return !(type_id == Data::getCode(str));
     }
     // 格式化输出
     friend String to_string(const Token &w) {
-        return to_string("(", w.type_index, ", ", w.val_index, " )");
+        String val =
+            w.name_id == VALUE_WORD ? "-" : to_string(w.name_id + 1);
+        return to_string("(", w.type_id, ", ", val, " )");
     }
-    friend std::ostream &operator<<(std::ostream &out, const Token &w) {
-        out << "(";
-        out.width(2);
-        out << w.type_index;
-        out << " , ";
-        if (w.val_index == VALUE_WORD)
-            out << "-";
-        else
-            out << w.val_index + 1;
-        out << " )";
-        return out;
-    }
+    STRING_OUT(Token);
 };
 
 // 词法分析器
 class Lexer {
     // 符号表引用
     Storage &storage;
+    
     // 获取字符串的编码，返回Token
     Token getResult(const std::string &str, int index = VALUE_NONE) {
         if (str == UNDEFINED || str == "/*") {
@@ -80,7 +72,7 @@ class Lexer {
             if (!isdigit(str[j]) && !isalpha(str[j])) break;
         }
 
-        std::string ide = str.substr(i, j - i);
+        String ide = str.substr(i, j - i);
         i += ide.length();
         if (isReserveWord(ide))
             return getResult(ide);
@@ -89,9 +81,9 @@ class Lexer {
             return getResult(IDENTIFIER, index);
         }
     }
-    Token delimiter(const std::string &str, size_t &i, unsigned r) {
+    Token delimiter(const String &str, size_t &i, unsigned r) {
         if (str.length() > i + 1) {
-            std::string substr = str.substr(i, 2);
+            String substr = str.substr(i, 2);
             if (isDoubleCharDelimiter(substr)) {
                 if (isAnotationBegin(substr)) {
                     size_t j = i + 2;
@@ -100,12 +92,9 @@ class Lexer {
                             i = j + 2;
                             return getResult("/*");
                         }
-                    throw "第" + std::to_string(r) + "行第" +
-                        std::to_string(i) + "列: 注释界符缺失。";
+                    throw to_string("第", r, "行第", i, "列: 注释界符缺失。");
                 } else if (isAnotationEnd(substr))
-                    throw "第" + std::to_string(r) + "行第" +
-                        std::to_string(i) + "列: 不应出现字符" +
-                        std::string(1, str[i]);
+                    throw to_string("第", r, "行第", i, "列: 不应出现字符 ", str[i]);
                 else {
                     i += 2;
                     return getResult(substr);
@@ -121,9 +110,7 @@ class Lexer {
                 if (isSingleDelimiter(str[j]) || isspace(str[j]))
                     break;
                 else
-                    throw "第" + std::to_string(r) + "行第" +
-                        std::to_string(j) + "列: 不应出现字符" +
-                        std::string(1, str[j]);
+                    throw to_string("第", r, "行第", j, "列: 不应出现字符 ", str[j]);
             }
 
         std::string value = str.substr(i, j - i);
@@ -138,9 +125,7 @@ class Lexer {
         }
 
         if (j == str.length())
-            throw "第" + std::to_string(r) + "行第" + std::to_string(i) +
-                "列: 字符串引号缺失。";
-
+            throw to_string("第", r, "行第", i, "列: 字符串引号缺失。");
         else {
             std::string value = str.substr(i, j - i + 1);
             int index = storage.get(value);
@@ -165,10 +150,8 @@ public:
             else if (isSingleDelimiter(str[i]))
                 return delimiter(str, i, r);
             else
-                throw "第" + std::to_string(r) + "行第" + std::to_string(i) +
-                    "列: 出现非法字符" + std::string(1, str[i]);
+                throw to_string("第", r, "行第", i, "列: 不应出现字符 ", str[i]);
         }
-
         return getResult(UNDEFINED);
     }
 };

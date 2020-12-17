@@ -17,9 +17,7 @@ struct Quaternary {
 	friend String to_string(const Quaternary &q) {
 		return to_string("(", q.op, ", ", q.l, ", ", q.r, ", ", q.id, ")");
 	}
-    friend std::ostream &operator<<(std::ostream &out, const Quaternary &q) {
-		return (out << to_string(q));
-    }
+    STRING_OUT(Quaternary);
 };
 
 // 语法分析器
@@ -109,7 +107,7 @@ class Parser {
     // 判断变量是否声明
     void expectDeclaredVar() {
 		debug("expectDeclaredVar()");
-        auto var = storage[tokens[i].val_index];
+        auto var = storage[tokens[i].name_id];
         if (!var.declared) error("变量 ", var.name, " 未声明。");
 		i++;
     }
@@ -117,7 +115,7 @@ class Parser {
 	void expectVar(const char *t) {
 		debug("expectVar(", t, ")");
 		expectDeclaredVar(); i--;
-        auto var = storage[tokens[i].val_index];
+        auto var = storage[tokens[i].name_id];
         if (var.type != Data::getCode(t))
             error("变量 ", var.name, " 应为", t);
 		i++;
@@ -144,26 +142,20 @@ class Parser {
     // <type> → integer│bool│char
     // 成功返回type_id, 失败error
     unsigned type() {
-        auto type_id = tokens[i].type_index;
+        auto type_id = tokens[i].type_id;
 		auto type_name = Data::getValue(type_id);
 		if (!Data::type().contains(type_name))
 			error("expect type");
 		std::cerr << "type()=" << type_name << "\n";
 		return ++i, type_id;
     }
-    // 递归下降的语法分析
 
-    bool isVariableDefinitionEnd(size_t i) {
-        // return i + 2 < tokens.size() && tokens[i] == ":" &&
-        //    isType(tokens[i + 1].type_index) && tokens[i + 2] == ";";
-        return true;
-    }
     // <program> → program <identifier>;
     // <variable_declaration> <compound_statement>.
     void program() {
 		debug("program()");
         expect("program", IDENTIFIER, ";");
-        gen("program", tokens[i - 2].val_index, EMPTY, EMPTY);
+        gen("program", tokens[i - 2].name_id, EMPTY, EMPTY);
         variableDeclaration();
         compoundStatement();
         expect(".");
@@ -207,11 +199,11 @@ class Parser {
 		debug("identifierList()");
         Vector<size_t> idList;
         expect(IDENTIFIER);
-        idList.push_back(tokens[i - 1].val_index);
+        idList.push_back(tokens[i - 1].name_id);
         while (true) {
             if (!tryExpect(",")) break;
             expect(IDENTIFIER);
-            idList.push_back(tokens[i - 1].val_index);
+            idList.push_back(tokens[i - 1].name_id);
         }
         return idList;
     }
@@ -238,10 +230,10 @@ class Parser {
         unsigned mark = i-1; // tokens[mark] == ":="
         int id = EMPTY;
         arithmeticExpression(id);
-        if (storage[tokens[mark - 1].val_index].type != storage[id].type)
+        if (storage[tokens[mark - 1].name_id].type != storage[id].type)
             error("赋值语句左右类型不一致。");
         else
-            gen(":=", id, EMPTY, tokens[mark - 1].val_index);
+            gen(":=", id, EMPTY, tokens[mark - 1].name_id);
     }
     // <if_statement>→ if <boolean_expression> then <statement>
     // │ if <boolean_expression> then <statement> else <statement>
@@ -319,7 +311,7 @@ class Parser {
             arithmeticExpression(id_r);
             int index = storage.get(TEMPORARY_VARIABLE);
             storage[index].type = storage[id].type;
-            gen(Data::getValue(tokens[mark].type_index), id, id_r, index);
+            gen(Data::getValue(tokens[mark].type_id), id, id_r, index);
             id = index;
         }
     }
@@ -335,7 +327,7 @@ class Parser {
             arithmeticItem(id_r);
             int index = storage.get(TEMPORARY_VARIABLE);
             storage[index].type = storage[id].type;
-            gen(Data::getValue(tokens[mark].type_index), id, id_r, index);
+            gen(Data::getValue(tokens[mark].type_id), id, id_r, index);
             id = index;
         }
     }
@@ -364,12 +356,12 @@ class Parser {
 		}
 		if (tryExpect(IDENTIFIER)) {
 			i--; expectVar("integer");
-			id = tokens[i].val_index;
+			id = tokens[i].name_id;
 			return ;
 		}
 		expect(INTEGER);
-		storage[tokens[i-1].val_index].type = Data::getCode("integer");
-		id = tokens[i-1].val_index;
+		storage[tokens[i-1].name_id].type = Data::getCode("integer");
+		id = tokens[i-1].name_id;
     }
     // <boolean_expression> → <boolean_expression> or
     // <boolean_item>│<boolean_item>
@@ -420,7 +412,7 @@ class Parser {
         // <boolean_constant>
         if (tryExpect(BOOLEAN_CONSTANT)) {
             tl = intermediateCode.size();
-            gen("jnz", tokens[i - 1].type_index, EMPTY, EMPTY);
+            gen("jnz", tokens[i - 1].type_id, EMPTY, EMPTY);
             fl = intermediateCode.size();
             gen("j", EMPTY, EMPTY, EMPTY);
             return;
@@ -430,8 +422,8 @@ class Parser {
             (i -= 3), expectVar("integer");
             (i += 1), expectVar("integer");
             tl = intermediateCode.size();
-            gen(String("j") + Data::getValue(tokens[i-2].type_index),
-                tokens[i - 3].val_index, tokens[i].val_index, EMPTY);
+            gen(String("j") + Data::getValue(tokens[i-2].type_id),
+                tokens[i - 3].name_id, tokens[i].name_id, EMPTY);
             fl = intermediateCode.size();
             gen("j", EMPTY, EMPTY, EMPTY);
             return;
@@ -455,14 +447,14 @@ class Parser {
         };
         if (tryProcedure(arithmeticHelper)) {
             tl = intermediateCode.size();
-            gen("j" + Data::getValue(tokens[mark].type_index), id1, id2, EMPTY);
+            gen("j" + Data::getValue(tokens[mark].type_id), id1, id2, EMPTY);
             fl = intermediateCode.size();
             return;
         }
         // <identifier>
         expectVar("boolean");
         tl = intermediateCode.size();
-        gen("jnz", tokens[i-1].val_index, EMPTY, EMPTY);
+        gen("jnz", tokens[i-1].name_id, EMPTY, EMPTY);
         fl = intermediateCode.size();
         gen("j", EMPTY, EMPTY, EMPTY);
     }
@@ -477,13 +469,15 @@ public:
             size_t i = 0;
             while (i < str.length()) {
                 Token token = scanner.scan(str, i, row);
-                if (token.val_index != VALUE_NONE) tokens.push_back(token);
+                if (token.name_id != VALUE_NONE) tokens.push_back(token);
             }
             rowMark.push_back(tokens.size());
             ++row;
         }
 		debug("Tokens:");
 		for (auto tk : tokens) debug(tk);
+        debug("Storages:");
+        for (size_t i = 0; i < storage.size(); i++) debug(storage[i]);
         program();
     }
     void printIntermediateCode(std::ostream &out) {
