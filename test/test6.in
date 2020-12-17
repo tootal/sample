@@ -1,1 +1,7 @@
-1 + 2 + 3 + 4
+program example5;
+var a, b, max : integer;
+    c : bool;
+begin
+    if true then max := a
+    else max := b
+end.

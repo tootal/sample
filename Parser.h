@@ -412,7 +412,7 @@ class Parser {
         };
         // <boolean_constant>
         if (tryExpect(BOOLEAN_CONSTANT)) {
-            return gen_code("jnz", tokens[i - 1].type_id, EMPTY);
+            return gen_code("j", EMPTY, EMPTY);
         }
         // <identifier> <relation_word> <identifier>
         if (tryExpect(IDENTIFIER, RELATION_WORD, IDENTIFIER)) {
