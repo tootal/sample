@@ -15,14 +15,15 @@ struct Identifer {
     Identifer(const String &name_, int type_, bool declared_)
         : name(name_), type(type_), declared(declared_) {}
     // 临时标识符(从1开始编号)
-    static Identifer tempIdentifer() {
+    static Identifer tempIdentifer(bool clear = false) {
         static int count = 0;
-        count++;
+        count = clear ? 0 : count + 1;
         return {to_string("T", count), 0, true};
     }
     // 格式化输出
     friend String to_string(const Identifer &w) {
-        return to_string("(name=", w.name, ", type=", w.type, ", declared=", w.declared, ")");
+        return to_string("(name=", w.name, ", type=", w.type,
+                         ", declared=", w.declared, ")");
     }
     STRING_OUT(Identifer);
 };

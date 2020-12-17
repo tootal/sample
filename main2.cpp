@@ -48,6 +48,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
         Storage storage;
+        Identifer::tempIdentifer(true);
         Parser parser(storage);
         std::cout << "\n语法分析、语义分析结果如下：\n";
         try {
