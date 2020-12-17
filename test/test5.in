@@ -1,1 +1,6 @@
-if i = 5 then x := y;
+program example5;
+var a, b, max : integer;
+begin
+    if a >= b then max := a
+    else max := b
+end.

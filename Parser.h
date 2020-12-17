@@ -14,9 +14,9 @@ struct Quaternary {
     Quaternary(const std::string &op_, int l_, int r_, int id_)
         : op(op_), l(l_), r(r_), id(id_) {}
     // 格式化输出
-	friend String to_string(const Quaternary &q) {
-		return to_string("(", q.op, ", ", q.l, ", ", q.r, ", ", q.id, ")");
-	}
+    friend String to_string(const Quaternary &q) {
+        return to_string("(", q.op, ", ", q.l, ", ", q.r, ", ", q.id, ")");
+    }
     STRING_OUT(Quaternary);
 };
 
@@ -25,29 +25,25 @@ class Parser {
     // 符号表引用
     Storage &storage;
     // 中间代码
-    Vector<Quaternary> intermediateCode;
+    Vector<Quaternary> inCode;
     // 词法单元(Token)序列
     Vector<Token> tokens;
     // 行数标记
     Vector<size_t> rowMark;
     // 当前正在处理的Token下标
     size_t i = 0;
-    // 获取Tokens[i]所在行数
-    size_t getRow() const {
-        for (size_t j = 0; i < rowMark.size(); ++j)
-            if (i < rowMark[j]) return j;
-        return rowMark.size();
-    }
     // 生成四元式id = l op r
     size_t gen(const std::string &op, int l, int r, int id) {
-        intermediateCode.emplace_back(op, l, r, id);
-		debug("gen", intermediateCode.back());
-        return intermediateCode.size() - 1;
+        inCode.emplace_back(op, l, r, id);
+        debug("gen", qustr(inCode.back()));
+        return inCode.size() - 1;
     }
     // 生成错误信息，抛出异常
     template <typename... Args>
     void error(Args... args) const {
-        throw to_string("第", getRow(), "行: ", args...);
+        int r = std::upper_bound(rowMark.begin(), rowMark.end(), i) -
+                rowMark.begin();
+        throw to_string("第", r + 1, "行: ", args...);
     }
 
     // expect开头的函数表示一定要匹配，若不匹配则报告错误并抛出异常
@@ -56,11 +52,11 @@ class Parser {
 
     // 匹配对应的token序列
     void expect(const char *s) {
-		debug("expect(", s, ")");
+        debug("expect(", s, ")");
         if (i < tokens.size() && tokens[i] == s)
             i++;
         else
-            error("缺少 ", s);
+            i--, error("缺少 ", s);
     }
     template <typename Head, typename... Tail>
     void expect(Head head, Tail... tail) {
@@ -68,13 +64,13 @@ class Parser {
     }
     // 尝试匹配token
     bool tryExpect(const char *s) {
-		bool flag;
+        bool flag;
         if (i < tokens.size() && tokens[i] == s)
             i++, flag = true;
         else
-			flag = false;
-		debug("tryExpect(", s, ")=", flag);
-		return flag;
+            flag = false;
+        debug("tryExpect(", s, ")=", flag);
+        return flag;
     }
     template <typename... Args>
     bool tryExpect(Args... args) {
@@ -88,72 +84,79 @@ class Parser {
     template <typename Func>
     bool tryProcedure(const Func &func) {
         int oi = i;
-        auto ocode = intermediateCode.size();
+        auto ocode = inCode.size();
         bool flag = true;
         try {
             func();
         } catch (...) {  // ignore exceptions
             flag = false;
             i = oi;  // restore state
-            while (intermediateCode.size() > ocode) intermediateCode.pop_back();
+            while (inCode.size() > ocode) inCode.pop_back();
         }
-		debug("tryProcedure()=", flag);
+        debug("tryProcedure()=", flag);
         return flag;
     }
     // 判断是否为文件末尾
     void expectEOF() const {
+        debug("expectEOF()");
         if (i != tokens.size()) error("文件末尾异常。");
     }
     // 判断变量是否声明
     void expectDeclaredVar() {
-		debug("expectDeclaredVar()");
+        debug("expectDeclaredVar()");
         auto var = storage[tokens[i].name_id];
         if (!var.declared) error("变量 ", var.name, " 未声明。");
-		i++;
+        i++;
     }
-	// check if var is spec type
-	void expectVar(const char *t) {
-		debug("expectVar(", t, ")");
-		expectDeclaredVar(); i--;
+    // check if var is spec type
+    void expectVar(const char *t) {
+        debug("expectVar(", t, ")");
+        expectDeclaredVar();
+        i--;
         auto var = storage[tokens[i].name_id];
-        if (var.type != Data::getCode(t))
-            error("变量 ", var.name, " 应为", t);
-		i++;
-	}
+        if (var.type != Data::getCode(t)) error("变量 ", var.name, " 应为", t);
+        i++;
+    }
     // 回填
     void backpatch(unsigned p, unsigned t) {
-        for (int i = p; i != EMPTY;) {
-            int tmp = intermediateCode[i].id;
-            intermediateCode[i].id = t;
-            i = tmp;
+        debug("backpatch(", p, ", ", t, ")");
+        while (p != EMPTY) {
+            int tmp = inCode[p].id;
+            inCode[p].id = t;
+            debug("backpatch(", p, ") = ", qustr(inCode[p]));
+            p = tmp;
         }
     }
-    unsigned merge(unsigned p1, unsigned p2) {
+    int merge(int p1, int p2) {
+        debug("merge(", p1, ", ", p2, ")");
+        int ret;
         if (p2 == EMPTY_CHAIN)
-            return p1;
+            ret = p1;
         else {
-            int i;
-            for (i = p2; intermediateCode[i].id != EMPTY;)
-                i = intermediateCode[i].id;
-            intermediateCode[i].id = p1;
-            return p2;
+            for (int i = p2; inCode[i].id != EMPTY;) {
+                i = inCode[i].id;
+                inCode[i].id = p1;
+                debug(qustr(inCode[i]));
+            }
+            ret = p2;
         }
+        debug("merge(", p1, ", ", p2, ") -> ", ret);
+        return ret;
     }
     // <type> → integer│bool│char
     // 成功返回type_id, 失败error
     unsigned type() {
         auto type_id = tokens[i].type_id;
-		auto type_name = Data::getValue(type_id);
-		if (!Data::type().contains(type_name))
-			error("expect type");
-		std::cerr << "type()=" << type_name << "\n";
-		return ++i, type_id;
+        auto type_name = Data::getValue(type_id);
+        if (!Data::type().contains(type_name)) error("缺少类型");
+        std::cerr << "type()=" << type_name << "\n";
+        return ++i, type_id;
     }
 
     // <program> → program <identifier>;
     // <variable_declaration> <compound_statement>.
     void program() {
-		debug("program()");
+        debug("program()");
         expect("program", IDENTIFIER, ";");
         gen("program", tokens[i - 2].name_id, EMPTY, EMPTY);
         variableDeclaration();
@@ -170,12 +173,12 @@ class Parser {
     // <variable_define> → <identifier_list>:<type>;
     // <variable_define>│<identifier_list>:<type>;
     void variableDefine() {
-		debug("variableDefine()");
+        debug("variableDefine()");
         auto idList = identifierList();
         if (idList.empty()) error("缺少变量定义！");
         variableDefineHelper(idList);
         while (tryExpect(IDENTIFIER)) {
-			i--;
+            i--;
             auto idList = identifierList();
             if (idList.empty()) break;
             variableDefineHelper(idList);
@@ -187,16 +190,17 @@ class Parser {
         if (t == 0)
             error("未定义变量类型！");
         else {
+            debug("define ", Data::getValue(t), " ", idList);
             for (auto i : idList) {
                 storage[i].declared = true;
                 storage[i].type = t;
             }
         }
-		expect(";");
+        expect(";");
     }
     // <identifier_list> → <identifier> , <identifier_list>│<identifier>
     Vector<size_t> identifierList() {
-		debug("identifierList()");
+        debug("identifierList()");
         Vector<size_t> idList;
         expect(IDENTIFIER);
         idList.push_back(tokens[i - 1].name_id);
@@ -209,27 +213,27 @@ class Parser {
     }
     // <statement> →
     // <assignment_statement>│<if_statement>│<while_statement>│<repeat_statement>│<compound_statement>
-    void statement(unsigned &chain) {
-		debug("statement()");
+    int statement() {
+        debug("statement()");
         if (tryExpect(IDENTIFIER))
-            i--, assignmentStatement();
+            return i--, assignmentStatement(), EMPTY_CHAIN;
         else if (tryExpect("if"))
-            i--, ifStatement(chain);
+            return i--, ifStatement();
         else if (tryExpect("while"))
-            i--, whileStatement(chain);
+            return i--, whileStatement();
         else if (tryExpect("repeat"))
-            i--, repeatStatement(chain);
+            return i--, repeatStatement();
         else if (tryExpect("begin"))
-            i--, compoundStatement();
+            return i--, compoundStatement();
         else
-            error("非法语句！");
+            return error("非法语句！"), EMPTY_CHAIN;
     }
     void assignmentStatement() {
-		debug("assignmentStatement()");
-		expect(IDENTIFIER, ":=");
-        unsigned mark = i-1; // tokens[mark] == ":="
-        int id = EMPTY;
-        arithmeticExpression(id);
+        debug("assignmentStatement()");
+        expect(IDENTIFIER, ":=");
+        (i -= 2), expectDeclaredVar(), (i++);
+        unsigned mark = i - 1;  // tokens[mark] == ":="
+        int id = arithmeticExpression();
         if (storage[tokens[mark - 1].name_id].type != storage[id].type)
             error("赋值语句左右类型不一致。");
         else
@@ -237,226 +241,219 @@ class Parser {
     }
     // <if_statement>→ if <boolean_expression> then <statement>
     // │ if <boolean_expression> then <statement> else <statement>
-    void ifStatement(unsigned &chain) {
-		debug("ifStatement()");
-		expect("if");
-        unsigned tl, fl, then_chain = EMPTY_CHAIN, else_chain = EMPTY_CHAIN;
-        booleanExpression(tl, fl);
+    int ifStatement() {
+        debug("ifStatement()");
+        expect("if");
+        auto [tl, fl] = booleanExpression();
+        debug("booleanExpression() -> (", tl, ", ", fl, ")");
         expect("then");
-        backpatch(tl, intermediateCode.size());
-        statement(then_chain);
+        backpatch(tl, inCode.size());
+        auto then_chain = statement();
+        debug("then_chain -> ", then_chain);
         if (tryExpect("else")) {
-            auto mark = intermediateCode.size();
+            auto mark = inCode.size();
             gen("j", EMPTY, EMPTY, EMPTY);
-            backpatch(fl, intermediateCode.size());
+            backpatch(fl, inCode.size());
             auto tmp_chain = merge(mark, then_chain);
-            statement(else_chain);
-            chain = merge(tmp_chain, else_chain);
+            auto else_chain = statement();
+            debug("else_chain -> ", else_chain);
+            return merge(tmp_chain, else_chain);
         } else {
-            chain = merge(fl, then_chain);
+            return merge(fl, then_chain);
         }
     }
     // <while_statement> → while <boolean_expression> do <statement>
-    void whileStatement(unsigned &chain) {
-		debug("whileStatement()");
-		expect("while");
-        unsigned tl, fl, tmp_chain = EMPTY_CHAIN,
-                         mark = intermediateCode.size();
-        booleanExpression(tl, fl);
+    int whileStatement() {
+        debug("whileStatement()");
+        expect("while");
+        auto mark = inCode.size();
+        auto [tl, fl] = booleanExpression();
         expect("do");
-        backpatch(tl, intermediateCode.size());
-        statement(tmp_chain);
+        backpatch(tl, inCode.size());
+        auto tmp_chain = statement();
         backpatch(tmp_chain, mark);
         gen("j", EMPTY, EMPTY, mark);
-        chain = fl;
+        return fl;
     }
     // <repeat_statement> → repeat <statement> until <boolean_expression>
-    void repeatStatement(unsigned &chain) {
-		expect("repeat");
-        unsigned tl, fl;
-        unsigned mark = intermediateCode.size();
-        statement(chain);
+    int repeatStatement() {
+        expect("repeat");
+        unsigned mark = inCode.size();
+        auto chain = statement();
         expect("until");
-        booleanExpression(tl, fl);
+        auto [tl, fl] = booleanExpression();
         chain = tl;
         backpatch(fl, mark);
+        return chain;
     }
     // <compound_statement> → begin <statement_list> end
-    void compoundStatement() {
-		debug("compoundStatement()");
+    int compoundStatement() {
+        debug("compoundStatement()");
         expect("begin");
-        statementList();
+        auto chain = statementList();
         expect("end");
+        return chain;
     }
     // <statement_list> → <statement> ;<statement_list>│<statement>
-    void statementList() {
-		debug("statementList()");
-        unsigned chain = EMPTY_CHAIN;
-        statementListHelper(chain);
-        while (tryExpect(";")) statementListHelper(chain);
+    int statementList() {
+        debug("statementList()");
+        auto chain = statementListHelper();
+        while (tryExpect(";")) chain = statementListHelper();
+        return chain;
     }
-    void statementListHelper(unsigned &chain) {
-        statement(chain);
-        if (chain != EMPTY_CHAIN) backpatch(chain, intermediateCode.size());
+    int statementListHelper() {
+        debug("statementListHelper()");
+        auto chain = statement();
+        debug("statementListHelper() chain -> ", chain);
+        if (chain != EMPTY_CHAIN) backpatch(chain, inCode.size());
+        return chain;
     }
     // <arithmetic_expression> → <arithmetic_expression> + <arithmetic_item>
     // │<arithmetic_expression> - <arithmetic_item>
     // │<arithmetic_item>
-    void arithmeticExpression(int &id) {
-		debug("arithmeticExpression()");
-        arithmeticItem(id);
+    int arithmeticExpression() {
+        debug("arithmeticExpression()");
+        auto id = arithmeticItem();
         if (tryExpect("+") || tryExpect("-")) {
             unsigned mark = i - 1;
-            int id_r = EMPTY;
-            arithmeticExpression(id_r);
+            int id_r = arithmeticExpression();
             int index = storage.get(TEMPORARY_VARIABLE);
             storage[index].type = storage[id].type;
             gen(Data::getValue(tokens[mark].type_id), id, id_r, index);
             id = index;
         }
+        return id;
     }
     // <arithmetic_item> → <arithmetic_item> * <arithmetic_factor>
     // │<arithmetic_item> / <arithmetic_factor>
     // │<arithmetic_factor>
-    void arithmeticItem(int &id) {
-		debug("arithmeticItem()");
-        arithmeticFactor(id);
+    int arithmeticItem() {
+        debug("arithmeticItem()");
+        auto id = arithmeticFactor();
         if (tryExpect("*") || tryExpect("/")) {
             unsigned mark = i - 1;
-            int id_r = EMPTY;
-            arithmeticItem(id_r);
+            int id_r = arithmeticItem();
             int index = storage.get(TEMPORARY_VARIABLE);
             storage[index].type = storage[id].type;
             gen(Data::getValue(tokens[mark].type_id), id, id_r, index);
             id = index;
         }
+        return id;
     }
     // <arithmetic_factor> → <arithmetic_variable>
     // │- <arithmetic_factor>
-    void arithmeticFactor(int &id) {
-		debug("arithmeticFactor()");
+    int arithmeticFactor() {
+        debug("arithmeticFactor()");
         if (tryExpect("-")) {
             unsigned mark = i - 1;
-            arithmeticFactor(id);
-            int index = storage.get(TEMPORARY_VARIABLE);
+            auto id = arithmeticFactor();
+            auto index = storage.get(TEMPORARY_VARIABLE);
             storage[index].type = storage[id].type;
             gen("-", id, EMPTY, index);
-            id = index;
+            return index;
         } else
-            arithmeticVariable(id);
+            return arithmeticVariable();
     }
     // <arithmetic_variable> → <integer>
     // │<identifier>
     // │( <arithmetic_expression> )
-    void arithmeticVariable(int &id) {
-		debug("arithmeticVariable()");
-		if (tryExpect("(")) {
-			arithmeticExpression(id);
-			return ;
-		}
-		if (tryExpect(IDENTIFIER)) {
-			i--; expectVar("integer");
-			id = tokens[i].name_id;
-			return ;
-		}
-		expect(INTEGER);
-		storage[tokens[i-1].name_id].type = Data::getCode("integer");
-		id = tokens[i-1].name_id;
+    int arithmeticVariable() {
+        debug("arithmeticVariable()");
+        if (tryExpect("(")) {
+            int id = arithmeticExpression();
+            return expect(")"), id;
+        }
+        if (tryExpect(IDENTIFIER)) {
+            i--, expectVar("integer");
+            return tokens[i - 1].name_id;
+        }
+        expect(INTEGER);
+        storage[tokens[i - 1].name_id].type = Data::getCode("integer");
+        return tokens[i - 1].name_id;
     }
     // <boolean_expression> → <boolean_expression> or
     // <boolean_item>│<boolean_item>
-    void booleanExpression(unsigned &tl, unsigned &fl) {
-		debug("booleanExpression()");
-        unsigned tl_1, fl_1, tl_2, fl_2;
-        booleanItem(tl_1, fl_1);
+    Pair booleanExpression() {
+        debug("booleanExpression()");
+        auto [tl_1, fl_1] = booleanItem();
         if (tryExpect("or")) {
-            backpatch(fl_1, intermediateCode.size());
-            booleanExpression(tl_2, fl_2);
-            fl = fl_2;
-            tl = merge(tl_1, tl_2);
-        } else {
-            tl = tl_1;
-            fl = fl_1;
-        }
+            backpatch(fl_1, inCode.size());
+            auto [tl_2, fl_2] = booleanExpression();
+            return {merge(tl_1, tl_2), fl_2};
+        } else
+            return {tl_1, fl_1};
     }
-    // <boolean_item> → <boolean_item> and <boolean_factor>│<boolean_factor>
-    void booleanItem(unsigned &tl, unsigned &fl) {
-		debug("booleanItem()");
-        unsigned tl_1, fl_1, tl_2, fl_2;
-        booleanFactor(tl_1, fl_1);
+    // <boolean_item> → <boolean_item> and <boolean_factor>
+    // │<boolean_factor>
+    Pair booleanItem() {
+        debug("booleanItem()");
+        auto [tl_1, fl_1] = booleanFactor();
         if (tryExpect("and")) {
-            backpatch(tl_1, intermediateCode.size());
-            booleanItem(tl_2, fl_2);
-            tl = tl_2;
-            fl = merge(fl_1, fl_2);
-        } else {
-            tl = tl_1;
-            fl = fl_1;
-        }
+            backpatch(tl_1, inCode.size());
+            auto [tl_2, fl_2] = booleanItem();
+            return {tl_2, merge(fl_1, fl_2)};
+        } else
+            return {tl_1, fl_1};
     }
     // <boolean_factor> → <boolean_variable>│not <boolean_factor>
-    void booleanFactor(unsigned &tl, unsigned &fl) {
-		debug("booleanFactor()");
-        if (tryExpect("not"))
-            return booleanFactor(fl, tl);
-        else
-            return booleanVariable(tl, fl);
+    Pair booleanFactor() {
+        debug("booleanFactor()");
+        return tryExpect("not") ? booleanFactor() : booleanVariable();
     }
     // <boolean_variable> → <boolean_constant>
     // │ <identifier>
     // │ ( <boolean_expression> )
     // │ <identifier> <relation_word> <identifier>
     // │ <arithmetic_expression> <relation_word> <arithmetic_expression>
-    void booleanVariable(unsigned &tl, unsigned &fl) {
-		debug("booleanVariable()");
+    Pair booleanVariable() {
+        debug("booleanVariable()");
+        auto gen_code = [this](const String &op, int l, int r) -> Pair {
+            auto tl = inCode.size();
+            gen(op, l, r, EMPTY);
+            auto fl = inCode.size();
+            gen("j", EMPTY, EMPTY, EMPTY);
+            return {tl, fl};
+        };
         // <boolean_constant>
         if (tryExpect(BOOLEAN_CONSTANT)) {
-            tl = intermediateCode.size();
-            gen("jnz", tokens[i - 1].type_id, EMPTY, EMPTY);
-            fl = intermediateCode.size();
-            gen("j", EMPTY, EMPTY, EMPTY);
-            return;
+            return gen_code("jnz", tokens[i - 1].type_id, EMPTY);
         }
         // <identifier> <relation_word> <identifier>
         if (tryExpect(IDENTIFIER, RELATION_WORD, IDENTIFIER)) {
             (i -= 3), expectVar("integer");
             (i += 1), expectVar("integer");
-            tl = intermediateCode.size();
-            gen(String("j") + Data::getValue(tokens[i-2].type_id),
-                tokens[i - 3].name_id, tokens[i].name_id, EMPTY);
-            fl = intermediateCode.size();
-            gen("j", EMPTY, EMPTY, EMPTY);
-            return;
+            return gen_code(String("j") + Data::getValue(tokens[i - 2].type_id),
+                            tokens[i - 3].name_id, tokens[i - 1].name_id);
         }
         // ( <boolean_expression> )
-        auto booleanHelper = [this, &tl, &fl]() {
-			debug("booleanHelper()");
-            expect("(");
-            booleanExpression(tl, fl);
-            expect(")");
-        };
-        if (tryProcedure(booleanHelper)) return;
-        int id1, id2, mark;
+        {
+            int tl, fl;
+            auto booleanHelper = [this, &tl, &fl]() {
+                debug("booleanHelper()");
+                expect("(");
+                std::tie(tl, fl) = booleanExpression();
+                expect(")");
+            };
+            if (tryProcedure(booleanHelper)) return {tl, fl};
+        }
         // <arithmetic_expression> <relation_word> <arithmetic_expression>
-        auto arithmeticHelper = [this, &id1, &id2, &mark]() {
-			debug("arithmeticHelper()");
-            arithmeticExpression(id1);
-            mark = i;
-            expect(RELATION_WORD);
-            arithmeticExpression(id2);
-        };
-        if (tryProcedure(arithmeticHelper)) {
-            tl = intermediateCode.size();
-            gen("j" + Data::getValue(tokens[mark].type_id), id1, id2, EMPTY);
-            fl = intermediateCode.size();
-            return;
+        {
+            int id1, id2, mark;
+            auto arithmeticHelper = [this, &id1, &id2, &mark]() {
+                debug("arithmeticHelper()");
+                id1 = arithmeticExpression();
+                mark = i;
+                expect(RELATION_WORD);
+                id2 = arithmeticExpression();
+            };
+            if (tryProcedure(arithmeticHelper)) {
+                return gen_code("j" + Data::getValue(tokens[mark].type_id), id1,
+                                id2);
+            }
         }
         // <identifier>
         expectVar("boolean");
-        tl = intermediateCode.size();
-        gen("jnz", tokens[i-1].name_id, EMPTY, EMPTY);
-        fl = intermediateCode.size();
-        gen("j", EMPTY, EMPTY, EMPTY);
+        return gen_code("jnz", tokens[i - 1].name_id, EMPTY);
     }
 
 public:
@@ -474,40 +471,42 @@ public:
             rowMark.push_back(tokens.size());
             ++row;
         }
-		debug("Tokens:");
-		for (auto tk : tokens) debug(tk);
+        debug("rowMark: ", rowMark);
+        debug("Tokens:");
+        for (auto tk : tokens) debug(tk, Data::getValue(tk.type_id));
         debug("Storages:");
         for (size_t i = 0; i < storage.size(); i++) debug(storage[i]);
         program();
+        debug("parse done.");
     }
-    void printIntermediateCode(std::ostream &out) {
+    String qustr(const Quaternary &q) {
+        auto s = to_string("(", q.op, " , ");
+        if (q.l == EMPTY)
+            s += "- , ";
+        else if (q.op == "jnz") {
+            if (tokens[q.l] == BOOLEAN_CONSTANT)
+                s += to_string(Data::getValue(q.l), " , ");
+            else
+                s += to_string(storage[q.l].name, " , ");
+        } else
+            s += to_string(storage[q.l].name, " , ");
+        if (q.r == EMPTY)
+            s += "- , ";
+        else
+            s += to_string(storage[q.r].name, " , ");
+        if (q.op[0] == 'j')
+            s += to_string(q.id);
+        else if (q.id == EMPTY)
+            s += "-";
+        else
+            s += to_string(storage[q.id].name);
+        s += ")";
+        return s;
+    }
+    void printCode(std::ostream &out) {
         unsigned i = 0;
-        for (auto q : intermediateCode) {
-            out << "(";
-            out.width(2);
-            out << i << ")"
-                << "\t";
-            out << "(" << q.op << " , ";
-            if (q.l == EMPTY)
-                out << "-, ";
-            else if (q.op == "jnz") {
-                if (tokens[q.l] == BOOLEAN_CONSTANT)
-                    out << Data::getValue(q.l) << " , ";
-                else
-                    out << storage[q.l].name << ", ";
-            } else
-                out << storage[q.l].name << " , ";
-            if (q.r == EMPTY)
-                out << "- , ";
-            else
-                out << storage[q.r].name << " , ";
-            if (q.op[0] == 'j')
-                out << q.id;
-            else if (q.id == EMPTY)
-                out << "-";
-            else
-                out << storage[q.id].name;
-            out << ")\n";
+        for (auto q : inCode) {
+            out << to_string("(", i, ")  ", qustr(q), "\n");
             ++i;
         }
     }

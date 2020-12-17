@@ -21,15 +21,13 @@ int command(int argc, char *argv[]) {
         }
         Storage storage;
         Parser parser(storage);
-        std::cout << "\n语法分析、语义分析结果如下：\n";
         try {
             parser.parse(in);
         } catch (const String &msg) {
             std::cerr << msg << '\n';
             continue;
         }
-        parser.printIntermediateCode(std::cout);
-        std::cout << std::endl;
+        parser.printCode(std::cout);
         in.close();
 	}
 	return 0;
@@ -58,7 +56,7 @@ int main(int argc, char *argv[]) {
             std::cerr << msg << '\n';
             continue;
         }
-        parser.printIntermediateCode(std::cout);
+        parser.printCode(std::cout);
         std::cout << std::endl;
         in.close();
     }

@@ -32,7 +32,7 @@ struct Token {
     // 格式化输出
     friend String to_string(const Token &w) {
         String val =
-            w.name_id == VALUE_WORD ? "-" : to_string(w.name_id + 1);
+            w.name_id == VALUE_WORD ? "-" : to_string(w.name_id);
         return to_string("(", w.type_id, ", ", val, " )");
     }
     STRING_OUT(Token);

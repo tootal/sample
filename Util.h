@@ -3,8 +3,12 @@
 
 #include <algorithm>
 #include <vector>
+#include <utility>
+#include <tuple>
 
-// 调试输出
+#include <cassert>
+
+// 调试输出控制宏
 #ifdef DEBUG
 #define debug(...) std::cerr << to_string(__VA_ARGS__) << '\n'
 #else
@@ -29,6 +33,7 @@ public:
     auto contains(const T &x) const { return find(x) != cend(); }
 };
 
+// 字符串，主要用于调试输出
 class String : public std::string {
 public:
     String() : std::string() {}
@@ -39,10 +44,24 @@ String to_string(const char *x) { return String(x); }
 String to_string(const std::string &x) { return String(x); }
 String to_string(const String &x) { return x; }
 template <typename T>
-String to_string(T x) {
-    return String(std::to_string(x));
+String to_string(T v) {
+    if constexpr (std::is_integral<T>::value)
+        return std::to_string(v);
+    else {  // container
+        bool first = true;
+        String res = "{";
+        for (const auto &x : v) {
+            if (!first) res += ", ";
+            first = false;
+            res += to_string(x);
+        }
+        res += "}";
+        return res;
+    }
 }
 template <typename Head, typename... Tail>
 String to_string(Head H, Tail... T) {
     return to_string(H) + to_string(T...);
 }
+
+using Pair = std::pair<int, int>;
