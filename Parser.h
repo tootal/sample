@@ -135,7 +135,7 @@ class Parser {
             ret = p1;
         else {
             int i;
-            for (int i = p2; inCode[i].id != EMPTY;) i = inCode[i].id;
+            for (i = p2; inCode[i].id != EMPTY;) i = inCode[i].id;
             inCode[i].id = p1;
             debug(qustr(inCode[i]));
             ret = p2;
