@@ -68,10 +68,13 @@ class Parser {
     }
     // 尝试匹配token
     bool tryExpect(const char *s) {
+		bool flag;
         if (i < tokens.size() && tokens[i] == s)
-            return i++, true;
+            i++, flag = true;
         else
-            return false;
+			flag = false;
+        std::cerr << "tryExpect(" << s << ")=" << flag << '\n';
+		return flag;
     }
     template <typename... Args>
     bool tryExpect(Args... args) {
@@ -167,7 +170,6 @@ class Parser {
     // <variable_declaration> → var <variable_define>│ε
     void variableDeclaration() {
         if (!tryExpect("var")) return;
-        i++;
         return variableDefine();
     }
     // <variable_define> → <identifier_list>:<type>;
@@ -210,13 +212,13 @@ class Parser {
     // <assignment_statement>│<if_statement>│<while_statement>│<repeat_statement>│<compound_statement>
     void statement(unsigned &chain) {
         if (tryExpect(IDENTIFIER))
-            assignmentStatement();
+            i--, assignmentStatement();
         else if (tryExpect("if"))
-            ifStatement(chain);
+            i--, ifStatement(chain);
         else if (tryExpect("while"))
-            whileStatement(chain);
+            i--, whileStatement(chain);
         else if (tryExpect("repeat"))
-            repeatStatement(chain);
+            i--, repeatStatement(chain);
         else if (tryExpect("begin"))
             i--, compoundStatement();
         else
@@ -224,9 +226,8 @@ class Parser {
     }
     void assignmentStatement() {
         expect(":=");
-        unsigned mark = i;
+        unsigned mark = i-1;
         int id = EMPTY;
-        i++;  // tokens[i] == ":="
         arithmeticExpression(id);
         if (storage[tokens[mark - 1].val_index].type != storage[id].type)
             error("赋值语句左右类型不一致。");
@@ -408,10 +409,10 @@ class Parser {
         }
         // <identifier> <relation_word> <identifier>
         if (tryExpect(IDENTIFIER, RELATIONWORD, IDENTIFIER)) {
-            i -= 3, expectIntegerVar();
-            i += 2, expectIntegerVar();
+            (i -= 3), expectIntegerVar();
+            (i += 2), expectIntegerVar();
             tl = intermediateCode.size();
-            gen(std::string("j") + Data::getValue(tokens[i - 1].type_index),
+            gen(String("j") + Data::getValue(tokens[i - 1].type_index),
                 tokens[i - 2].val_index, tokens[i].val_index, EMPTY);
             fl = intermediateCode.size();
             gen("j", EMPTY, EMPTY, EMPTY);
