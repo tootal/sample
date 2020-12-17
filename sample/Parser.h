@@ -6,7 +6,11 @@
 #define EMPTY -1
 #define EMPTY_CHAIN 0
 
-#define debug(...) std::cerr << to_string(__VA_ARGS__) << '\n';
+#ifdef DEBUG
+#define debug(...) std::cerr << to_string(__VA_ARGS__) << '\n'
+#else
+#define debug(...) 42
+#endif
 
 // 四元式 id = l op r
 struct Quaternary {
@@ -60,7 +64,7 @@ class Parser {
 
     // 匹配对应的token序列
     void expect(const char *s) {
-        std::cerr << "expect(" << s << ")\n";
+		debug("expect(", s, ")");
         if (i < tokens.size() && tokens[i] == s)
             i++;
         else
@@ -77,7 +81,7 @@ class Parser {
             i++, flag = true;
         else
 			flag = false;
-        std::cerr << "tryExpect(" << s << ")=" << flag << '\n';
+		debug("tryExpect(", s, ")=", flag);
 		return flag;
     }
     template <typename... Args>
@@ -101,6 +105,7 @@ class Parser {
             i = oi;  // restore state
             while (intermediateCode.size() > ocode) intermediateCode.pop_back();
         }
+		debug("tryProcedure()=", flag);
         return flag;
     }
     // 判断是否为文件末尾
@@ -108,22 +113,21 @@ class Parser {
         if (i != tokens.size()) error("文件末尾异常。");
     }
     // 判断变量是否声明
-    void expectDeclaredVar() const {
+    void expectDeclaredVar() {
+		debug("expectDeclaredVar()");
         auto var = storage[tokens[i].val_index];
         if (!var.declared) error("变量 ", var.name, " 未声明。");
+		i++;
     }
-    // 判断变量是否为整型
-    void expectIntegerVar() const {
+	// check if var is spec type
+	void expectVar(const char *t) {
+		debug("expectVar(", t, ")");
+		expectDeclaredVar(); i--;
         auto var = storage[tokens[i].val_index];
-        if (var.type != Data::getCode("integer"))
-            error("变量 ", var.name, " 应为整型。");
-    }
-    // 判断变量是否为整型
-    void expectBooleanVar() const {
-        auto var = storage[tokens[i].val_index];
-        if (var.type != Data::getCode("boolean"))
-            error("变量 ", var.name, " 应为布尔型。");
-    }
+        if (var.type != Data::getCode(t))
+            error("变量 ", var.name, " 应为", t);
+		i++;
+	}
     // 回填
     void backpatch(unsigned p, unsigned t) {
         for (int i = p; i != EMPTY;) {
@@ -313,6 +317,7 @@ class Parser {
     // │<arithmetic_expression> - <arithmetic_item>
     // │<arithmetic_item>
     void arithmeticExpression(int &id) {
+		debug("arithmeticExpression()");
         arithmeticItem(id);
         if (tryExpect("+") || tryExpect("-")) {
             unsigned mark = i - 1;
@@ -328,6 +333,7 @@ class Parser {
     // │<arithmetic_item> / <arithmetic_factor>
     // │<arithmetic_factor>
     void arithmeticItem(int &id) {
+		debug("arithmeticItem()");
         arithmeticFactor(id);
         if (tryExpect("*") || tryExpect("/")) {
             unsigned mark = i - 1;
@@ -342,6 +348,7 @@ class Parser {
     // <arithmetic_factor> → <arithmetic_variable>
     // │- <arithmetic_factor>
     void arithmeticFactor(int &id) {
+		debug("arithmeticFactor()");
         if (tryExpect("-")) {
             unsigned mark = i - 1;
             arithmeticFactor(id);
@@ -355,25 +362,20 @@ class Parser {
     // <arithmetic_variable> → <integer>
     // │<identifier>
     // │( <arithmetic_expression> )
-    void arithmeticVariable(int &ide) {
-        if (i < tokens.size()) {
-            if (tokens[i] == IDENTIFIER) {
-                if (storage[tokens[i].val_index].type ==
-                    Data::getCode("integer")) {
-                    ide = tokens[i].val_index;
-                    ++i;
-                } else
-                    error("变量 ", storage[tokens[i].val_index].name,
-                          " 未声明。");
-            } else if (tokens[i] == INTEGER) {
-                storage[tokens[i].val_index].type = Data::getCode("integer");
-                ide = tokens[i].val_index;
-                ++i;
-            } else if (tokens[i] == "(") {
-                i++;
-                arithmeticExpression(ide);
-            }
-        }
+    void arithmeticVariable(int &id) {
+		debug("arithmeticVariable()");
+		if (tryExpect("(")) {
+			arithmeticExpression(id);
+			return ;
+		}
+		if (tryExpect(IDENTIFIER)) {
+			i--; expectVar("integer");
+			id = tokens[i].val_index;
+			return ;
+		}
+		expect(INTEGER);
+		storage[tokens[i-1].val_index].type = Data::getCode("integer");
+		id = tokens[i-1].val_index;
     }
     // <boolean_expression> → <boolean_expression> or
     // <boolean_item>│<boolean_item>
@@ -421,7 +423,6 @@ class Parser {
     // │ <arithmetic_expression> <relation_word> <arithmetic_expression>
     void booleanVariable(unsigned &tl, unsigned &fl) {
 		debug("booleanVariable()");
-        if (tryExpect("not"))
         // <boolean_constant>
         if (tryExpect(BOOLEANCONSTANT)) {
             tl = intermediateCode.size();
@@ -432,41 +433,42 @@ class Parser {
         }
         // <identifier> <relation_word> <identifier>
         if (tryExpect(IDENTIFIER, RELATIONWORD, IDENTIFIER)) {
-            (i -= 3), expectIntegerVar();
-            (i += 2), expectIntegerVar();
+            (i -= 3), expectVar("integer");
+            (i += 1), expectVar("integer");
             tl = intermediateCode.size();
-            gen(String("j") + Data::getValue(tokens[i - 1].type_index),
-                tokens[i - 2].val_index, tokens[i].val_index, EMPTY);
+            gen(String("j") + Data::getValue(tokens[i-2].type_index),
+                tokens[i - 3].val_index, tokens[i].val_index, EMPTY);
             fl = intermediateCode.size();
             gen("j", EMPTY, EMPTY, EMPTY);
-			i++;
             return;
         }
         // ( <boolean_expression> )
-        auto boolean_helper = [this, &tl, &fl]() {
+        auto booleanHelper = [this, &tl, &fl]() {
+			debug("booleanHelper()");
             expect("(");
             booleanExpression(tl, fl);
             expect(")");
         };
-        if (tryProcedure(boolean_helper)) return;
+        if (tryProcedure(booleanHelper)) return;
         int id1, id2, mark;
         // <arithmetic_expression> <relation_word> <arithmetic_expression>
-        auto arithmetic_helper = [this, &id1, &id2, &mark]() {
+        auto arithmeticHelper = [this, &id1, &id2, &mark]() {
+			debug("arithmeticHelper()");
             arithmeticExpression(id1);
             mark = i;
             expect(RELATIONWORD);
             arithmeticExpression(id2);
         };
-        if (tryProcedure(arithmetic_helper)) {
+        if (tryProcedure(arithmeticHelper)) {
             tl = intermediateCode.size();
             gen("j" + Data::getValue(tokens[mark].type_index), id1, id2, EMPTY);
             fl = intermediateCode.size();
             return;
         }
         // <identifier>
-        expectBooleanVar();
+        expectVar("boolean");
         tl = intermediateCode.size();
-        gen("jnz", tokens[i].val_index, EMPTY, EMPTY);
+        gen("jnz", tokens[i-1].val_index, EMPTY, EMPTY);
         fl = intermediateCode.size();
         gen("j", EMPTY, EMPTY, EMPTY);
     }
