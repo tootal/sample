@@ -34,7 +34,7 @@ void Parser::backpatch(unsigned p, unsigned t) {
 
 
 unsigned Parser::merge(unsigned p1, unsigned p2) {
-
+	std::cerr << "merge(" << p1 << ", " << p2 << ")\n";
 	if (p2 == EMPTY_CHAIN)
 		return p1;
 
