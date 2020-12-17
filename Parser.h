@@ -475,7 +475,7 @@ public:
     }
     String qustr(const Quaternary &q) {
         if (q.op == "program")
-            return to_string("(program , ", storage[q.l].name, " , - , - )");
+            return to_string("(program,", storage[q.l].name, ",-,-)");
         auto s = to_string("(", q.op, " , ");
         if (q.l == EMPTY)
             s += "- , ";
