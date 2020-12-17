@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         std::cout << "\n语法分析、语义分析结果如下：\n";
         try {
             parser.parse(in);
-        } catch (const std::string &msg) {
+        } catch (const String &msg) {
             std::cerr << msg << '\n';
             continue;
         }

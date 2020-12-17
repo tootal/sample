@@ -13,6 +13,11 @@ struct Quaternary {
     int l, r, id;
     Quaternary(const std::string &op_, int l_, int r_, int id_)
         : op(op_), l(l_), r(r_), id(id_) {}
+    // 格式化输出
+    friend std::ostream &operator<<(std::ostream &out, const Quaternary &q) {
+        out << "(" << q.op << ", " << q.l << ", " << q.r << ", " << q.id << ")";
+        return out;
+    }
 };
 
 // 语法分析器
@@ -36,6 +41,7 @@ class Parser {
     // 生成四元式id = l op r
     size_t gen(const std::string &op, int l, int r, int id) {
         intermediateCode.emplace_back(op, l, r, id);
+        std::cerr << "gen" << intermediateCode.back() << '\n';
         return intermediateCode.size() - 1;
     }
     // 生成错误信息，抛出异常
@@ -49,7 +55,8 @@ class Parser {
     // 多个参数要求全部匹配成功，匹配成功后均会**移动下标**
 
     // 匹配对应的token序列
-    void expect(const String &s) {
+    void expect(const char *s) {
+        std::cerr << "expect(" << s << ")\n";
         if (i < tokens.size() && tokens[i] == s)
             i++;
         else
@@ -60,7 +67,7 @@ class Parser {
         expect(head), expect(tail...);
     }
     // 尝试匹配token
-    bool tryExpect(const String &s) {
+    bool tryExpect(const char *s) {
         if (i < tokens.size() && tokens[i] == s)
             return i++, true;
         else
@@ -68,7 +75,7 @@ class Parser {
     }
     template <typename... Args>
     bool tryExpect(Args... args) {
-        int oi = i;                    // mark origin i
+        int oi = i;                      // mark origin i
         if ((... && tryExpect(args))) {  // unary left fold
             return true;
         } else
@@ -89,8 +96,8 @@ class Parser {
         }
         return flag;
     }
-    // 判断是否为末尾
-    void expect() const {
+    // 判断是否为文件末尾
+    void expectEOF() const {
         if (i != tokens.size() - 1) error("文件末尾异常。");
     }
     // 判断变量是否声明
@@ -148,13 +155,14 @@ class Parser {
     // <program> → program <identifier>;
     // <variable_declaration> <compound_statement>.
     void program() {
+        std::cerr << "program()\n";
         expect("program", IDENTIFIER, ";");
         gen("program", tokens[i - 2].val_index, EMPTY, EMPTY);
         variableDeclaration();
         compoundStatement();
         expect(".");
         gen("sys", EMPTY, EMPTY, EMPTY);
-        expect();
+        expectEOF();
     }
     // <variable_declaration> → var <variable_define>│ε
     void variableDeclaration() {
@@ -461,7 +469,8 @@ public:
             out << "(";
             out.width(2);
             out << i << ")"
-                << "\t(" << q.op << " , ";
+                << "\t";
+            out << "(" << q.op << " , ";
             if (q.l == EMPTY)
                 out << "-, ";
             else if (q.op == "jnz") {
